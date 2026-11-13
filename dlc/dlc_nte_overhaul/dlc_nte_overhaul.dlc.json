@@ -1,0 +1,17 @@
+{
+	"id": {
+		"steam": "529340",
+		"paradox": "dlc_nte_overhaul"
+	},
+	"displayName": {
+		"en": "Naval Treaty × Overhaul"
+	},
+	"category": {
+		"en": "DLC"
+	},
+	"description": {
+		"en": "Joint Maritime Order & 10-Slot Naval Overhaul Compatibility"
+	},
+	"thumbnailPath": "thumbnail.png",
+	"thirdPartyContent": true
+}

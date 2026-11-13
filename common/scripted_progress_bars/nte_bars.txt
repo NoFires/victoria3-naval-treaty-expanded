@@ -1,0 +1,41 @@
+﻿# Naval Treaty Expanded - 1.15 Scripted Progress Bars
+
+nte_treaty_stability_bar = {
+	name = "nte_treaty_stability_bar_name"
+	desc = "nte_treaty_stability_bar_desc"
+	second_desc = "nte_treaty_stability_bar_second_desc"
+
+	progress_texture = "gfx/interface/progressbar/progressbar_green.dds"
+	background_texture = "gfx/interface/progressbar/progressbar_bad.dds"
+	glow_texture = "gfx/interface/progressbar/progressbar_green_glow.dds"
+	glow_line_texture = "gfx/interface/progressbar/progressbar_green_glow_line.dds"
+	marker = yes
+
+	yearly_progress = {
+		if = {
+			limit = { exists = global_var:gnl_stability_drift }
+			add = {
+				desc = "nte_stability_drift_tt"
+				value = global_var:gnl_stability_drift
+			}
+		}
+	}
+
+	start_value = 75
+	min_value = 0
+	max_value = 100
+}
+
+nte_personal_quota_bar = {
+	name = "nte_personal_quota_bar_name"
+	desc = "nte_personal_quota_bar_desc"
+
+	progress_texture = "gfx/interface/progressbar/progressbar_gold.dds"
+	background_texture = "gfx/interface/progressbar/progressbar_default_bg.dds"
+	glow_texture = "gfx/interface/progressbar/progressbar_gold_glow.dds"
+	glow_line_texture = "gfx/interface/progressbar/progressbar_gold_glow_line.dds"
+
+	start_value = 0
+	min_value = 0
+	max_value = 120
+}

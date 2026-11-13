@@ -1,0 +1,418 @@
+﻿bilateral_naval_limitation_treaty = {
+	kind = directed
+	cost = 350
+
+	icon = "gfx/interface/icons/alert_icons/has_navy_in_reserve.dds"
+
+	flags = {
+		can_be_enforced
+		hostile
+	}
+
+	usage_limit = once_per_side
+	maintenance_paid_by = target_country
+
+	visible = {
+		country_rank >= rank_value:unrecognized_major_power
+		is_revolutionary = no
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = BILATERAL_NAVAL_LIMITATION_TREATY_POSSIBLE
+			scope:other_country = {
+				nte_country_effective_tonnage > 0
+			}
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			scope:target_country = {
+				is_country_alive = yes
+			}
+			scope:source_country = {
+				is_country_alive = yes
+			}
+		}
+		show_about_to_break_warning = {
+			scope:source_country = {
+				has_variable = nte_bilateral_near_limit_flag
+			}
+		}
+	}
+
+	can_ratify = {
+		custom_tooltip = {
+			text = BILATERAL_NAVAL_LIMITATION_TREATY_AT_WAR
+			NOT = {
+				scope:source_country = {
+					has_war_with = scope:target_country
+				}
+			}
+		}
+		custom_tooltip = {
+			text = BILATERAL_NAVAL_LIMITATION_TREATY_DUPLICATE_ARTICLE_SAME
+			NOT = {
+				scope:source_country = {
+					any_scope_treaty = {
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+						any_scope_article = {
+							has_type = bilateral_naval_limitation_treaty
+							source_country = scope:source_country
+						}
+					}
+				}
+			}
+		}
+		custom_tooltip = {
+			text = BILATERAL_NAVAL_LIMITATION_TREATY_ALREADY_RESTRICTED
+			OR = {
+				scope:treaty = { is_renegotiation = yes }
+				NOT = { scope:source_country = { has_variable = nte_bilateral_restricted_flag } }
+			}
+		}
+	}
+
+	on_entry_into_force = {
+		nte_bilateral_on_start = yes
+	}
+
+	on_enforced = {
+		scope:article_options.target_country = {
+			set_variable = { name = nte_bilateral_enforced_by_war months = 1 }
+		}
+		scope:article_options.source_country = {
+			if = {
+				limit = { NOT = { has_modifier = nte_bilateral_capital_slowdown } }
+				add_modifier = { name = nte_bilateral_capital_slowdown years = 3 }
+			}
+		}
+	}
+
+	can_withdraw = {
+		scope:withdrawing_country = scope:target_country
+	}
+
+	on_withdrawal = {
+		nte_bilateral_on_end_clean = yes
+	}
+
+	on_break = {
+		nte_bilateral_on_break_handler = yes
+	}
+
+	ai = {
+		treaty_categories = {
+			military
+		}
+
+		evaluation_chance = {
+			value = 0.15
+		}
+
+		article_ai_usage = {
+			request
+		}
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				scope:source_country = { save_temporary_scope_as = target }
+				scope:target_country = { save_temporary_scope_as = actor }
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -100
+				}
+
+				# National prestige & country rank check: great/major powers refuse humiliating unilateral disarmament in peacetime
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+					if = {
+						limit = {
+							country_rank >= scope:target_country.country_rank
+						}
+						value = -200
+					}
+					else_if = {
+						limit = {
+							country_rank >= rank_value:great_power
+						}
+						value = -150
+					}
+					else_if = {
+						limit = {
+							country_rank >= rank_value:major_power
+						}
+						value = -80
+					}
+					else_if = {
+						limit = {
+							country_rank >= rank_value:minor_power
+						}
+						value = -35
+					}
+					else_if = {
+						limit = {
+							scope:target_country.country_rank >= rank_value:great_power
+						}
+						value = 10
+					}
+					else = {
+						value = -10
+					}
+				}
+
+				if = {
+					limit = {
+						navy_size >= scope:target_country.navy_size
+					}
+					add = {
+						desc = "NTE_ACCEPTANCE_BILATERAL_STRONGER"
+						value = navy_size
+						divide = {
+							value = scope:target_country.navy_size
+							min = 1
+						}
+						subtract = 1
+						multiply = -50
+						add = -25
+						min = -120
+					}
+				}
+				else = {
+					add = {
+						desc = "NTE_ACCEPTANCE_BILATERAL_OUTGUNNED"
+						value = scope:target_country.navy_size
+						divide = {
+							value = navy_size
+							min = 1
+						}
+						subtract = 1
+						multiply = 10
+						min = 1
+						max = 25
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							has_attitude = { who = scope:target_country attitude = protective }
+						}
+						value = 15
+					}
+					else_if = {
+						limit = {
+							OR = {
+								has_attitude = { who = scope:target_country attitude = antagonistic }
+								has_attitude = { who = scope:target_country attitude = belligerent }
+								has_attitude = { who = scope:target_country attitude = domineering }
+								has_attitude = { who = scope:target_country attitude = rebellious }
+							}
+						}
+						value = -150
+					}
+					else_if = {
+						limit = {
+							OR = {
+								has_attitude = { who = scope:target_country attitude = wary }
+								has_attitude = { who = scope:target_country attitude = disinterested }
+							}
+						}
+						value = -45
+					}
+					else_if = {
+						limit = {
+							has_attitude = { who = scope:target_country attitude = cautious }
+						}
+						value = -15
+					}
+				}
+
+				# Unified non-linear naval fiscal pressure (mutually exclusive with default)
+				if = {
+					limit = { in_default = yes }
+					add = {
+						desc = "NTE_ACCEPTANCE_DEFAULT"
+						value = 25
+					}
+				}
+				else_if = {
+					limit = { nte_naval_fiscal_acceptance_score > 0 }
+					add = {
+						desc = "NTE_ACCEPTANCE_NAVAL_FISCAL_PRESSURE"
+						value = nte_naval_fiscal_acceptance_score
+						multiply = 0.45
+						round = yes
+						min = 1
+						max = 20
+					}
+				}
+
+				if = {
+					limit = { is_at_war = yes }
+					add = {
+						desc = "NTE_ACCEPTANCE_AT_WAR"
+						value = -80
+					}
+				}
+
+				if = {
+					limit = { has_law_or_variant = law_type:law_merchant_navy }
+					add = {
+						desc = "NTE_ACCEPTANCE_NAVY_LAW_MERCHANT"
+						value = 15
+					}
+				}
+				else_if = {
+					limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+					add = {
+						desc = "NTE_ACCEPTANCE_NAVY_LAW_DIPLOMATIC"
+						value = 10
+					}
+				}
+				else_if = {
+					limit = { has_law_or_variant = law_type:law_professional_navy }
+					add = {
+						desc = "NTE_ACCEPTANCE_NAVY_LAW_PROFESSIONAL"
+						value = -75
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							has_strategy = ai_strategy_colonial_expansion
+							has_strategy = ai_strategy_economic_imperialism
+							has_strategy = ai_strategy_territorial_expansion
+							has_strategy = ai_strategy_world_revolution
+							has_strategy = ai_strategy_restore_natural_borders
+							has_strategy = ai_strategy_unify_germany
+							has_strategy = ai_strategy_unify_italy
+							has_strategy = ai_strategy_prussia_of_the_balkans
+						}
+					}
+					add = {
+						desc = "NTE_ACCEPTANCE_STRATEGY_EXPANSIONIST"
+						value = -60
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_strategy = ai_strategy_maintain_power_balance
+							has_strategy = ai_strategy_armed_isolationism
+							has_strategy = ai_strategy_anti_imperialism
+							has_strategy = ai_strategy_socialism_in_one_country
+						}
+					}
+					add = {
+						desc = "NTE_ACCEPTANCE_STRATEGY_BALANCE_PEACE"
+						value = 5
+					}
+				}
+			}
+			else = {
+				scope:source_country = { save_temporary_scope_as = actor }
+				scope:target_country = { save_temporary_scope_as = target }
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = 25
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+					value = treaty_binding_period_commitment_acceptance
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 1
+
+			if = {
+				limit = {
+					scope:source_country.navy_size >= {
+						value = navy_size
+						multiply = 0.5
+					}
+				}
+				add = 1.5
+			}
+
+			if = {
+				limit = {
+					scope:source_country.country_rank >= rank_value:major_power
+				}
+				add = 1
+			}
+
+			if = {
+				limit = {
+					scope:source_country.navy_size < 5
+				}
+				multiply = 0
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 21
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 10
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+					max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy_severity = 0.25
+		infamy_min = define:NDiplomacy|WAR_GOAL_INFAMY_MAJOR_DEMAND_MIN
+		infamy_max = define:NDiplomacy|WAR_GOAL_INFAMY_MAJOR_DEMAND_MAX
+
+		infamy = {
+			value = 0
+
+			scope:target_country = {
+				add = country_infamy_value
+			}
+		}
+	}
+}

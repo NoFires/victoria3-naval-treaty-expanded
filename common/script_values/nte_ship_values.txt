@@ -1,0 +1,307 @@
+﻿# Naval Treaty Expanded - 1.15 Real Tonnage (Ship Era + Hit Points Complexity) & Voting Weights
+
+# Single ship tonnage value evaluated in `ship` scope
+# Capital ships count full tonnage (12-55 base + up to +45 mods); Cruisers are scaled ~35% (3-22 base + up to +14 mods); Destroyers/Submarines count 0
+nte_single_ship_effective_tonnage = {
+	value = 0
+	if = {
+		limit = { ship_group = ship_group:ship_group_capital_ships }
+		if = {
+			limit = { is_ship_type = ship_type_ship_of_the_line }
+			add = 12
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_early_ironclad }
+			add = 18
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_modern_ironclad }
+			add = 24
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_pre_dreadnought }
+			add = 30
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_dreadnought }
+			add = 40
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_super_dreadnought }
+			add = 55
+		}
+		else = {
+			add = 20
+		}
+		# Firepower / propulsion / doctrine complexity via power_projection (captures guns & offensive mods)
+		if = {
+			limit = { power_projection > 150 }
+			add = {
+				value = power_projection
+				subtract = 150
+				divide = 25
+				min = 0
+				max = 25
+			}
+		}
+		# Armor / hull durability premium via hit_points (1.15 capital ships start at 1600-4800+ HP)
+		if = {
+			limit = { hit_points > 2000 }
+			add = {
+				value = hit_points
+				subtract = 2000
+				divide = 250
+				min = 0
+				max = 20
+			}
+		}
+	}
+	else_if = {
+		limit = { ship_group = ship_group:ship_group_cruisers }
+		if = {
+			limit = { is_ship_type = ship_type_frigate }
+			add = 3
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_protected_cruiser }
+			add = 5
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_armored_cruiser }
+			add = 8
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_light_cruiser }
+			add = 9
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_seaplane_tender }
+			add = 13
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type_aircraft_carrier }
+			add = 22
+		}
+		else = {
+			add = 6
+		}
+		if = {
+			limit = { power_projection > 120 }
+			add = {
+				value = power_projection
+				subtract = 120
+				divide = 30
+				min = 0
+				max = 8
+			}
+		}
+		if = {
+			limit = { hit_points > 1200 }
+			add = {
+				value = hit_points
+				subtract = 1200
+				divide = 250
+				min = 0
+				max = 6
+			}
+		}
+		# Jeune Ecole doctrine prioritizes light cruisers/raiders: -28% treaty tonnage footprint on cruisers
+		if = {
+			limit = {
+				owner ?= { has_law_or_variant = law_type:law_jeune_ecole }
+			}
+			multiply = 0.72
+		}
+	}
+}
+
+# Total effective treaty tonnage of a country (evaluated in `country` scope)
+nte_country_effective_tonnage = {
+	value = 0
+	every_scope_ship = {
+		add = nte_single_ship_effective_tonnage
+	}
+	# Additive footprint reduction (capped at -28% max to prevent stacking exploits)
+	multiply = nte_tonnage_reduction_factor
+	round = yes
+}
+
+nte_tonnage_reduction_factor = {
+	value = 1.0
+	if = {
+		limit = { has_modifier = nte_mothballed_fleet_modifier }
+		subtract = 0.18
+	}
+	if = {
+		limit = { has_variable = nte_scrapping_program_active }
+		subtract = 0.10
+	}
+	if = {
+		limit = { has_variable = nte_tonnage_falsification_active }
+		subtract = 0.12
+	}
+	min = 0.72
+}
+
+# Mixed voting weight: Base seat vote (20) + 0.5 * Effective Tonnage (min 20, max 250)
+nte_country_vote_weight = {
+	value = 20
+	if = {
+		limit = { has_variable = nte_current_tonnage }
+		add = {
+			value = var:nte_current_tonnage
+			multiply = 0.5
+		}
+	}
+	else = {
+		add = {
+			value = nte_country_effective_tonnage
+			multiply = 0.5
+		}
+	}
+	if = {
+		limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+		multiply = 1.15
+	}
+	min = 20
+	max = 250
+	round = yes
+}
+
+# Country legal tonnage cap under Global Naval Limitation Treaty
+nte_global_legal_limit = {
+	value = 100
+	if = {
+		limit = {
+			exists = global_var:gnl_tonnage_base_limit
+			has_variable = nte_locked_tier_ratio
+		}
+		value = global_var:gnl_tonnage_base_limit
+		multiply = var:nte_locked_tier_ratio
+	}
+	# Isolation sanction reduces allowed cap by 25%
+	if = {
+		limit = { has_modifier = nte_isolated_sanction_modifier }
+		multiply = 0.75
+	}
+	# Escalator clause adds +20% emergency allowance
+	if = {
+		limit = { has_modifier = nte_escalator_clause_modifier }
+		multiply = 1.20
+	}
+	min = 40
+	round = yes
+}
+
+# Personal quota usage percentage (0 - 120+)
+nte_personal_quota_usage_pct = {
+	value = 0
+	if = {
+		limit = {
+			has_variable = nte_current_tonnage
+			has_variable = nte_current_legal_limit
+			var:nte_current_legal_limit > 0
+		}
+		value = var:nte_current_tonnage
+		divide = var:nte_current_legal_limit
+		multiply = 100
+		min = 0
+		max = 120
+	}
+}
+
+# Estimated share of total fixed expenses spent specifically on the NAVY (0.0 - 1.0)
+# Weights each ship at 1.5x an army battalion to separate naval upkeep from land-heavy militaries
+nte_estimated_naval_budget_share = {
+	value = 0
+	if = {
+		limit = { navy_size > 0 }
+		value = military_expenses_share
+		multiply = {
+			value = navy_size
+			multiply = 1.5
+			divide = {
+				value = navy_size
+				multiply = 1.5
+				add = army_size
+				min = 1
+			}
+		}
+		min = 0
+		max = 1
+	}
+}
+
+# Unified fiscal distress factor (0.0 when healthy/high reserves; rises sharply with depleted reserves, deficit, and debt)
+nte_fiscal_distress_multiplier = {
+	value = 0
+
+	# Credit/debt strain (non-linear: mild at low debt, severe near default)
+	if = {
+		limit = { scaled_debt > 0 }
+		add = {
+			value = scaled_debt
+			multiply = scaled_debt
+			multiply = 2.5
+		}
+		add = {
+			value = scaled_debt
+			multiply = 0.8
+		}
+	}
+
+	# Ongoing fiscal deficit, cushioned by gold reserves (abundant reserves absorb temporary deficits)
+	if = {
+		limit = {
+			fixed_income > 0
+			net_fixed_income < 0
+		}
+		add = {
+			value = net_fixed_income
+			multiply = -1
+			divide = {
+				value = fixed_income
+				min = 1
+			}
+			min = 0
+			max = 0.50
+			multiply = 2.0
+			multiply = {
+				value = 1.0
+				subtract = {
+					value = scaled_gold_reserves
+					multiply = 1.5
+					min = 0
+					max = 1.0
+				}
+				min = 0
+				max = 1.0
+			}
+		}
+	}
+
+	min = 0
+	max = 2.5
+}
+
+# Effective naval fiscal pressure index P = estimated naval budget share * fiscal distress factor
+nte_naval_fiscal_pressure_index = {
+	value = nte_estimated_naval_budget_share
+	multiply = nte_fiscal_distress_multiplier
+}
+
+# Acceptance score from unified naval fiscal pressure (0 when healthy/cushioned, 2..45 under genuine fiscal strain)
+nte_naval_fiscal_acceptance_score = {
+	value = 0
+	if = {
+		limit = {
+			navy_size >= 5
+			nte_naval_fiscal_pressure_index >= 0.012
+		}
+		value = nte_naval_fiscal_pressure_index
+		multiply = 180
+		min = 2
+		max = 45
+		round = yes
+	}
+}

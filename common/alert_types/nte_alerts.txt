@@ -1,0 +1,43 @@
+﻿# Naval Treaty Expanded - Top-bar Alerts for Tonnage Thresholds
+
+nte_tonnage_warning_alert = {
+	script_context = player_country
+	texture = "gfx/interface/icons/alert_icons/diplomatic_action.dds"
+	open_panel = journal
+	type = important_action
+	alert_group = treaty_article_in_danger
+
+	valid = {
+		OR = {
+			has_journal_entry = global_naval_limitation_union
+			has_variable = nte_bilateral_restricted_flag
+		}
+		NOR = {
+			has_variable = nte_global_over_limit_flag
+			has_variable = nte_bilateral_over_limit_flag
+		}
+		OR = {
+			has_variable = nte_global_near_limit_flag
+			has_variable = nte_bilateral_near_limit_flag
+		}
+	}
+}
+
+nte_tonnage_exceeded_alert = {
+	script_context = player_country
+	texture = "gfx/interface/icons/alert_icons/has_insufficient_convoys.dds"
+	open_panel = journal
+	type = angry_important_action
+	alert_group = treaty_article_in_danger
+
+	valid = {
+		OR = {
+			has_journal_entry = global_naval_limitation_union
+			has_variable = nte_bilateral_restricted_flag
+		}
+		OR = {
+			has_variable = nte_global_over_limit_flag
+			has_variable = nte_bilateral_over_limit_flag
+		}
+	}
+}

@@ -1,0 +1,29 @@
+﻿# Naval Treaty Expanded - Compatibility Hook for Naval Overhaul Mod (10-slot / Arms Race)
+# Appends to on_actions list instead of overwriting naval_overhaul_on_ship_constructed's own effect block.
+
+naval_overhaul_on_ship_constructed = {
+	on_actions = {
+		nte_overhaul_compat_pulse
+	}
+}
+
+nte_overhaul_compat_pulse = {
+	effect = {
+		if = {
+			limit = { NOT = { has_global_variable = nte_naval_overhaul_detected } }
+			set_global_variable = nte_naval_overhaul_detected
+		}
+		if = {
+			limit = {
+				has_global_variable = gnl_formed
+				has_variable = gnl_participating_country
+				exists = global_var:global_gnl_chair_country
+				NOT = { has_global_variable = nte_overhaul_flavor_fired }
+			}
+			set_global_variable = nte_overhaul_flavor_fired
+			global_var:global_gnl_chair_country = {
+				trigger_event = { id = nte_global.10 days = 3 }
+			}
+		}
+	}
+}

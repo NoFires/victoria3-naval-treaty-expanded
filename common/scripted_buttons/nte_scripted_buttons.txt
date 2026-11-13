@@ -1,0 +1,420 @@
+﻿# Naval Treaty Expanded - Scripted Journal Buttons (1.15)
+
+nte_btn_propose_revision_vote = {
+	name = "nte_btn_propose_revision_vote_name"
+	desc = "nte_btn_propose_revision_vote_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		OR = {
+			country_rank >= rank_value:great_power
+			AND = {
+				exists = global_var:global_gnl_chair_country
+				this = global_var:global_gnl_chair_country
+			}
+		}
+		custom_tooltip = {
+			text = nte_btn_no_active_vote_tt
+			NOT = { has_global_variable = gnl_voting_active }
+		}
+		custom_tooltip = {
+			text = nte_btn_revision_cooldown_tt
+			NOT = { has_global_variable = gnl_revision_cooldown }
+		}
+	}
+
+	effect = {
+		set_global_variable = gnl_voting_active
+		set_global_variable = { name = gnl_voting_months_left value = 3 }
+		set_global_variable = { name = gnl_vote_weighted_sum value = 0 }
+		set_global_variable = { name = gnl_vote_total_weight value = 0 }
+		set_global_variable = { name = gnl_revision_cooldown months = 24 }
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			remove_variable = nte_voted_revision_flag
+			trigger_event = { id = nte_global.2 days = 1 }
+		}
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = { has_variable = nte_global_over_limit_flag }
+			add = 10
+		}
+		if = {
+			limit = {
+				OR = {
+					scaled_debt > 0.1
+					has_law_or_variant = law_type:law_merchant_navy
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+nte_btn_propose_isolation_sanction = {
+	name = "nte_btn_propose_isolation_sanction_name"
+	desc = "nte_btn_propose_isolation_sanction_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		custom_tooltip = {
+			text = nte_btn_no_active_iso_tt
+			NOT = { has_global_variable = gnl_isolation_vote_active }
+		}
+		custom_tooltip = {
+			text = nte_btn_need_3_members_tt
+			any_country = {
+				count >= 3
+				has_variable = gnl_participating_country
+			}
+		}
+		custom_tooltip = {
+			text = nte_btn_need_breaching_member_tt
+			any_country = {
+				has_variable = gnl_participating_country
+				NOT = { this = root }
+				OR = {
+					has_modifier = global_naval_limitation_union_penalty
+					infamy >= 50
+				}
+			}
+		}
+	}
+
+	effect = {
+		ordered_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { this = root }
+				OR = {
+					has_modifier = global_naval_limitation_union_penalty
+					infamy >= 50
+				}
+			}
+			order_by = nte_country_effective_tonnage
+			position = 0
+			set_global_variable = { name = gnl_isolation_target value = this }
+		}
+		set_global_variable = gnl_isolation_vote_active
+		set_global_variable = { name = gnl_isolation_months_left value = 2 }
+		set_global_variable = { name = gnl_iso_yes_weight value = 0 }
+		set_global_variable = { name = gnl_iso_total_weight value = 0 }
+		every_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { this = global_var:gnl_isolation_target }
+			}
+			remove_variable = nte_iso_voted_yes
+			remove_variable = nte_iso_voted_flag
+			trigger_event = { id = nte_global.3 days = 1 }
+		}
+	}
+
+	ai_chance = {
+		value = 10
+		if = {
+			limit = {
+				OR = {
+					has_modifier = global_naval_limitation_union_penalty
+					has_modifier = nte_isolated_sanction_modifier
+					infamy >= 50
+				}
+			}
+			add = -20
+		}
+	}
+}
+
+nte_btn_invoke_escalator_clause = {
+	name = "nte_btn_invoke_escalator_clause_name"
+	desc = "nte_btn_invoke_escalator_clause_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		custom_tooltip = {
+			text = nte_btn_escalator_threat_tt
+			has_global_variable = gnl_escalator_threat_active
+		}
+		NOT = { has_modifier = nte_escalator_clause_modifier }
+	}
+
+	effect = {
+		add_modifier = { name = nte_escalator_clause_modifier years = 3 }
+		nte_update_country_tonnage_vars = yes
+	}
+
+	ai_chance = {
+		value = 15
+	}
+}
+
+nte_btn_peaceful_withdrawal = {
+	name = "nte_btn_peaceful_withdrawal_name"
+	desc = "nte_btn_peaceful_withdrawal_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		OR = {
+			custom_tooltip = {
+				text = nte_btn_escalator_threat_tt
+				has_global_variable = gnl_escalator_threat_active
+			}
+			influence >= 100
+		}
+	}
+
+	effect = {
+		if = {
+			limit = { NOT = { has_global_variable = gnl_escalator_threat_active } }
+			change_infamy = 5
+			add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+			add_modifier = { name = nte_withdrawal_cost_modifier years = 2 }
+		}
+		set_variable = { name = nte_withdrawn_from_treaty months = 2 }
+		save_scope_as = withdrawing_country
+		nte_global_on_withdrawal = yes
+	}
+
+	ai_chance = {
+		value = 0
+	}
+}
+
+nte_btn_propose_naval_holiday = {
+	name = "nte_btn_propose_naval_holiday_name"
+	desc = "nte_btn_propose_naval_holiday_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		OR = {
+			country_rank >= rank_value:great_power
+			AND = {
+				exists = global_var:global_gnl_chair_country
+				this = global_var:global_gnl_chair_country
+			}
+		}
+		custom_tooltip = {
+			text = nte_btn_holiday_cooldown_tt
+			NOT = { has_global_variable = gnl_holiday_cooldown }
+		}
+		NOT = { has_global_variable = gnl_naval_holiday_active }
+	}
+
+	effect = {
+		set_global_variable = { name = gnl_naval_holiday_active months = 36 }
+		set_global_variable = { name = gnl_holiday_cooldown months = 60 }
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			trigger_event = { id = nte_global.5 days = 1 }
+		}
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = { has_variable = nte_global_over_limit_flag }
+			add = 10
+		}
+		if = {
+			limit = { scaled_debt > 0.1 }
+			add = 15
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_merchant_navy }
+			add = 10
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_professional_navy }
+			add = -15
+		}
+	}
+}
+
+nte_btn_toggle_mothball_fleet = {
+	name = "nte_btn_toggle_mothball_fleet_name"
+	desc = "nte_btn_toggle_mothball_fleet_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		OR = {
+			has_modifier = nte_mothballed_fleet_modifier
+			is_at_war = no
+		}
+		nte_country_effective_tonnage > 0
+		NOT = { has_variable = nte_mothball_cooldown }
+	}
+
+	effect = {
+		set_variable = { name = nte_mothball_cooldown months = 12 }
+		if = {
+			limit = { has_modifier = nte_mothballed_fleet_modifier }
+			remove_modifier = nte_mothballed_fleet_modifier
+		}
+		else = {
+			add_modifier = { name = nte_mothballed_fleet_modifier }
+		}
+		nte_update_country_tonnage_vars = yes
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				NOT = { has_modifier = nte_mothballed_fleet_modifier }
+				has_variable = nte_global_over_limit_flag
+			}
+			add = 80
+		}
+		if = {
+			limit = {
+				has_modifier = nte_mothballed_fleet_modifier
+				NOR = {
+					has_variable = nte_global_over_limit_flag
+					has_variable = nte_global_near_limit_flag
+				}
+			}
+			add = 60
+		}
+	}
+}
+
+nte_btn_naval_intelligence_exchange = {
+	name = "nte_btn_naval_intelligence_exchange_name"
+	desc = "nte_btn_naval_intelligence_exchange_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		custom_tooltip = {
+			text = nte_btn_intel_cooldown_tt
+			NOT = { has_variable = nte_intel_cooldown }
+		}
+	}
+
+	effect = {
+		set_variable = { name = nte_intel_cooldown months = 24 }
+		add_modifier = { name = nte_naval_intelligence_exchange_modifier months = 12 }
+		je:global_naval_limitation_union ?= {
+			add_progress = { value = 1 name = nte_treaty_stability_bar }
+		}
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			nte_update_country_tonnage_vars = yes
+		}
+	}
+
+	ai_chance = {
+		value = 10
+	}
+}
+
+nte_btn_falsify_tonnage = {
+	name = "nte_btn_falsify_tonnage_name"
+	desc = "nte_btn_falsify_tonnage_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		NOT = { has_variable = nte_tonnage_falsification_active }
+		NOT = { has_variable = nte_falsification_cooldown }
+		NOT = { has_modifier = nte_isolated_sanction_modifier }
+		influence >= 50
+	}
+
+	effect = {
+		set_variable = { name = nte_tonnage_falsification_active months = 24 }
+		set_variable = { name = nte_falsification_cooldown months = 48 }
+		add_modifier = { name = nte_falsification_cost_modifier months = 24 }
+		nte_update_country_tonnage_vars = yes
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				has_variable = nte_global_over_limit_flag
+				infamy < 30
+			}
+			add = 15
+		}
+	}
+}
+
+nte_btn_scrap_obsolete_hulls = {
+	name = "nte_btn_scrap_obsolete_hulls_name"
+	desc = "nte_btn_scrap_obsolete_hulls_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		NOT = { has_variable = nte_scrapping_program_active }
+		NOT = { has_variable = nte_scrap_cooldown }
+		nte_country_effective_tonnage > 0
+	}
+
+	effect = {
+		set_variable = { name = nte_scrapping_program_active months = 24 }
+		set_variable = { name = nte_scrap_cooldown months = 48 }
+		add_modifier = { name = nte_scrap_dividend_modifier months = 24 }
+		ig:ig_armed_forces ?= {
+			add_modifier = { name = nte_ig_navy_disappointed years = 2 }
+		}
+		ig:ig_industrialists ?= {
+			add_modifier = { name = nte_ig_peace_dividend_happy years = 2 }
+		}
+		nte_update_country_tonnage_vars = yes
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = { has_variable = nte_global_over_limit_flag }
+			add = 60
+		}
+		if = {
+			limit = { scaled_debt > 0.15 }
+			add = 30
+		}
+	}
+}
+
+nte_btn_submarine_protocol = {
+	name = "nte_btn_submarine_protocol_name"
+	desc = "nte_btn_submarine_protocol_desc"
+
+	possible = {
+		has_variable = gnl_participating_country
+		NOT = { has_modifier = nte_submarine_protocol_modifier }
+		NOT = { has_modifier = nte_isolated_sanction_modifier }
+		NOT = { has_variable = nte_tonnage_falsification_active }
+		influence >= 50
+	}
+
+	effect = {
+		add_modifier = { name = nte_submarine_protocol_modifier years = 5 }
+		je:global_naval_limitation_union ?= {
+			add_progress = { value = 3 name = nte_treaty_stability_bar }
+		}
+	}
+
+	ai_chance = {
+		value = 15
+		if = {
+			limit = { infamy > 15 }
+			add = 25
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_merchant_navy }
+			add = 30
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+			add = 20
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_jeune_ecole }
+			add = -40
+		}
+	}
+}
+

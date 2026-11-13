@@ -1,0 +1,69 @@
+﻿types dlc_types {
+	type dlc_collection = flowcontainer {
+		margin_left = 20
+		spacing = 16
+
+		text_single = {
+			parentanchor = vcenter
+			max_width = 150
+			align = nobaseline
+			using = Font_Size_Medium
+			elide = right
+			text = "DLC"
+		}
+
+		flowcontainer = {
+			datamodel = "[GetDlcCollection]"
+			spacing = 10
+
+			item = {
+				container = {
+					parentanchor = vcenter
+					# Hide the Naval Treaty x Overhaul joint DLC badge unless Naval Overhaul mod is also loaded
+					visible = "[Or( Not( EqualTo_string( Dlc.GetName, Localize( 'dlc_nte_overhaul' ) ) ), Not( EqualTo_string( Localize( 'je_naval_arms_race' ), 'je_naval_arms_race' ) ) )]"
+
+					widget = {
+						visible = "[Dlc.IsMajor]"
+						size = { 75 75 }
+
+						dlc_button = {}
+					}
+
+					widget = {
+						visible = "[Not( Dlc.IsMajor )]"
+						size = { 55 55 }
+						position = { 0 10 }
+
+						dlc_button = {
+							blockoverride "nte_dlc_tooltip" {
+								tooltip = "[SelectLocalization( EqualTo_string( Dlc.GetName, Localize( 'dlc_nte_overhaul' ) ), 'dlc_nte_overhaul_tooltip', 'DLC_BUTTON_TOOLTIP' )]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type dlc_button = button {
+		size = { 100% 100% }
+		alpha = "[TransparentIfFalse( Dlc.IsEnabled )]"
+		onclick = "[Dlc.ShowInStore]"
+		block "nte_dlc_tooltip" {
+			tooltip = "DLC_BUTTON_TOOLTIP"
+		}
+		using = tooltip_ne
+
+		button = {
+			size = { 100% 100% }
+			alwaystransparent = yes
+
+			icon = {
+				size = { 100% 100% }
+				alwaystransparent = yes
+				parentanchor = center
+				texture = "[Dlc.GetIcon]"
+			}
+		}
+	}
+}

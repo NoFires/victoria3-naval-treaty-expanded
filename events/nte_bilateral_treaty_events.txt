@@ -1,0 +1,347 @@
+﻿namespace = nte_bilateral
+
+# Stage 1 (Low Relations): Enforcer learns of bilateral treaty breach
+nte_bilateral.1 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.1.t
+	desc = nte_bilateral.1.d
+	flavor = nte_bilateral.1.f
+
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 2
+
+	trigger = {
+		exists = scope:nte_breaker
+		scope:nte_breaker = { is_country_alive = yes }
+	}
+
+	option = {
+		name = nte_bilateral.1.a # Deliver Ultimatum
+		default_option = yes
+		change_relations = { country = scope:nte_breaker value = -20 }
+		scope:nte_breaker = {
+			trigger_event = { id = nte_bilateral.2 days = 5 }
+		}
+		ai_chance = { base = 80 }
+	}
+
+	option = {
+		name = nte_bilateral.1.b # Lodge formal protest only
+		add_modifier = { name = nte_bilateral_appeasement_prestige_loss years = 2 }
+		ai_chance = { base = 20 }
+	}
+}
+
+# Stage 2 (Low Relations): Breaker receives Ultimatum
+nte_bilateral.2 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.2.t
+	desc = nte_bilateral.2.d
+	flavor = nte_bilateral.2.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	trigger = {
+		exists = scope:nte_enforcer
+		scope:nte_enforcer = { is_country_alive = yes }
+	}
+
+	option = {
+		name = nte_bilateral.2.a # Back down and accept naval slowdown
+		set_variable = { name = nte_bilateral_grace_months value = 0 }
+		if = {
+			limit = { NOT = { has_modifier = nte_bilateral_breach_penalty } }
+			add_modifier = { name = nte_bilateral_capital_slowdown years = 3 }
+		}
+		add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+		ai_chance = {
+			base = 30
+			modifier = {
+				trigger = { navy_size < scope:nte_enforcer.navy_size }
+				add = 40
+			}
+		}
+	}
+
+	option = {
+		name = nte_bilateral.2.b # Defy the ultimatum!
+		default_option = yes
+		change_infamy = 12
+		change_relations = { country = scope:nte_enforcer value = -50 }
+		scope:nte_enforcer = {
+			trigger_event = { id = nte_bilateral.3 days = 5 }
+		}
+		ai_chance = { base = 40 }
+	}
+}
+
+# Stage 3 (Low Relations): Enforcer's Final Choice - Sanctions or Armed Intervention
+nte_bilateral.3 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.3.t
+	desc = nte_bilateral.3.d
+	flavor = nte_bilateral.3.f
+
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 2
+
+	trigger = {
+		exists = scope:nte_breaker
+		scope:nte_breaker = { is_country_alive = yes }
+	}
+
+	option = {
+		name = nte_bilateral.3.a # Impose Trade & Diplomatic Sanctions
+		default_option = yes
+		scope:nte_breaker = {
+			if = {
+				limit = { has_modifier = nte_bilateral_capital_slowdown }
+				remove_modifier = nte_bilateral_capital_slowdown
+			}
+			add_modifier = { name = nte_bilateral_breach_penalty years = 5 }
+		}
+		ai_chance = { base = 60 }
+	}
+
+	option = {
+		name = nte_bilateral.3.b # Launch Punitive Naval Diplomatic Play!
+		trigger = {
+			exists = scope:nte_breaker
+			is_at_war = no
+			scope:nte_breaker = {
+				is_country_alive = yes
+				is_at_war = no
+				NOT = { is_subject_of = root }
+			}
+			NOT = { is_subject_of = scope:nte_breaker }
+			NOT = { has_truce_with = scope:nte_breaker }
+			NOT = { has_treaty_alliance_with = { TARGET = scope:nte_breaker } }
+			NOT = { has_treaty_defensive_pact_with = { TARGET = scope:nte_breaker } }
+		}
+		create_diplomatic_play = {
+			name = nte_punitive_naval_play
+			target_country = scope:nte_breaker
+			type = dp_humiliation
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = { navy_size > scope:nte_breaker.navy_size }
+				add = 30
+			}
+		}
+	}
+
+	option = {
+		name = nte_bilateral.3.c # Stand down
+		add_modifier = { name = nte_bilateral_appeasement_prestige_loss years = 3 }
+		ai_chance = { base = 10 }
+	}
+}
+
+# High Relations Route: Appeasement & Graceful Revision
+nte_bilateral.10 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.10.t
+	desc = nte_bilateral.10.d
+	flavor = nte_bilateral.10.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	option = {
+		name = nte_bilateral.10.a # Accept reality & preserve friendship (Appeasement)
+		default_option = yes
+		change_relations = { country = scope:nte_breaker value = 15 }
+		add_modifier = { name = nte_bilateral_appeasement_prestige_loss years = 3 }
+		ai_chance = { base = 75 }
+	}
+
+	option = {
+		name = nte_bilateral.10.b # Express stern disappointment
+		change_relations = { country = scope:nte_breaker value = -20 }
+		ai_chance = { base = 25 }
+	}
+}
+
+# Post-signing Bilateral Ratio Selection (Zero GUI override solution)
+nte_bilateral.20 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.20.t
+	desc = nte_bilateral.20.d
+	flavor = nte_bilateral.20.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	trigger = {
+		exists = scope:nte_bilateral_target
+		scope:nte_bilateral_target = {
+			is_country_alive = yes
+			has_variable = nte_bilateral_restricted_flag
+		}
+	}
+
+	option = {
+		name = nte_bilateral.20.a # 30% Strict Limitation
+		if = {
+			limit = { NOT = { has_variable = nte_bilateral_enforced_by_war } }
+			change_infamy = 3
+			add_modifier = { name = nte_bilateral_pressure_cost_modifier months = 12 }
+		}
+		else = {
+			remove_variable = nte_bilateral_enforced_by_war
+		}
+		change_relations = { country = scope:nte_bilateral_target value = -25 }
+		scope:nte_bilateral_target = {
+			set_variable = {
+				name = nte_bilateral_ratio_pct
+				value = 30
+			}
+			set_variable = {
+				name = nte_bilateral_cap
+				value = {
+					value = root.nte_country_effective_tonnage
+					multiply = 30
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+		}
+		custom_tooltip = nte_bilateral.20.a_tt
+		ai_chance = {
+			base = 10
+			modifier = {
+				trigger = {
+					OR = {
+						has_variable = nte_bilateral_enforced_by_war
+						has_attitude = { who = scope:nte_bilateral_target attitude = antagonistic }
+					}
+				}
+				add = 40
+			}
+		}
+	}
+
+	option = {
+		name = nte_bilateral.20.b # 50% Half Limitation
+		if = {
+			limit = { has_variable = nte_bilateral_enforced_by_war }
+			remove_variable = nte_bilateral_enforced_by_war
+		}
+		change_relations = { country = scope:nte_bilateral_target value = -10 }
+		scope:nte_bilateral_target = {
+			set_variable = {
+				name = nte_bilateral_ratio_pct
+				value = 50
+			}
+			set_variable = {
+				name = nte_bilateral_cap
+				value = {
+					value = root.nte_country_effective_tonnage
+					multiply = 50
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+		}
+		custom_tooltip = nte_bilateral.20.b_tt
+		ai_chance = { base = 25 }
+	}
+
+	option = {
+		name = nte_bilateral.20.c # 60% Standard Parity (Default)
+		default_option = yes
+		if = {
+			limit = { has_variable = nte_bilateral_enforced_by_war }
+			remove_variable = nte_bilateral_enforced_by_war
+		}
+		scope:nte_bilateral_target = {
+			set_variable = {
+				name = nte_bilateral_ratio_pct
+				value = 60
+			}
+			set_variable = {
+				name = nte_bilateral_cap
+				value = {
+					value = root.nte_country_effective_tonnage
+					multiply = 60
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+		}
+		custom_tooltip = nte_bilateral.20.c_tt
+		ai_chance = { base = 45 }
+	}
+
+	option = {
+		name = nte_bilateral.20.e # 75% Lenient Limitation
+		if = {
+			limit = { has_variable = nte_bilateral_enforced_by_war }
+			remove_variable = nte_bilateral_enforced_by_war
+		}
+		scope:nte_bilateral_target = {
+			set_variable = {
+				name = nte_bilateral_ratio_pct
+				value = 75
+			}
+			set_variable = {
+				name = nte_bilateral_cap
+				value = {
+					value = root.nte_country_effective_tonnage
+					multiply = 75
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+		}
+		custom_tooltip = nte_bilateral.20.e_tt
+		ai_chance = {
+			base = 20
+			modifier = {
+				trigger = {
+					"relations(scope:nte_bilateral_target)" >= 20
+				}
+				add = 20
+			}
+		}
+	}
+}
+
+

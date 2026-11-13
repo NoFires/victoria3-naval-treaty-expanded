@@ -1,0 +1,49 @@
+﻿# Naval Treaty Expanded - AI Strategy Compatibility Injection (1.15)
+# Uses INJECT:ai_strategy_default in zz_ filename to load after 00_default_strategy.txt & Kuromi's AI (kai_*)
+
+INJECT:ai_strategy_default = {
+	wanted_navy_size = {
+		value = wanted_navy_size_script_value
+		if = {
+			limit = {
+				is_at_war = no
+			}
+			if = {
+				limit = {
+					OR = {
+						has_variable = nte_global_over_limit_flag
+						has_variable = nte_bilateral_over_limit_flag
+						has_modifier = global_naval_limitation_union_penalty
+						has_modifier = nte_bilateral_breach_penalty
+						has_modifier = nte_isolated_sanction_modifier
+					}
+				}
+				multiply = 0.70
+			}
+			else_if = {
+				limit = {
+					NOT = { has_modifier = nte_escalator_clause_modifier }
+					OR = {
+						has_variable = nte_global_near_limit_flag
+						has_variable = nte_bilateral_near_limit_flag
+						has_modifier = nte_naval_holiday_modifier
+					}
+				}
+				multiply = 0.90
+			}
+			if = {
+				limit = {
+					OR = {
+						has_variable = gnl_participating_country
+						has_variable = nte_bilateral_restricted_flag
+					}
+					OR = {
+						scaled_debt > 0.15
+						in_default = yes
+					}
+				}
+				multiply = 0.85
+			}
+		}
+	}
+}

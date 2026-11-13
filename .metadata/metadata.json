@@ -1,0 +1,16 @@
+{
+  "name" : "Naval Treaty Expanded",
+  "id" : "",
+  "version" : "0.1.0",
+  "supported_game_version" : "1.15.*",
+  "short_description" : "Early playable demo (v0.1.0) introducing a real ship tonnage engine, multilateral global naval limitation treaties, and enforceable bilateral disarmament treaties for Victoria 3 (1.15.*).",
+  "tags" : [
+    "Gameplay",
+    "Military",
+    "Diplomacy"
+  ],
+  "relationships" : [],
+  "game_custom_data" : {
+    "multiplayer_synchronized" : true
+  }
+}

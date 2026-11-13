@@ -1,0 +1,16 @@
+﻿# Naval Treaty Expanded - On Actions (1.15)
+
+on_monthly_pulse_country = {
+	on_actions = {
+		nte_monthly_bilateral_action
+	}
+}
+
+nte_monthly_bilateral_action = {
+	effect = {
+		if = {
+			limit = { has_variable = nte_bilateral_restricted_flag }
+			nte_bilateral_monthly_check = yes
+		}
+	}
+}

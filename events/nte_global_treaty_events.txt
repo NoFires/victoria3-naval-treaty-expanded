@@ -1,0 +1,658 @@
+﻿namespace = nte_global
+
+# 1: Treaty Entry Notification
+nte_global.1 = {
+	type = country_event
+	placement = root
+	title = nte_global.1.t
+	desc = nte_global.1.d
+	flavor = nte_global.1.f
+
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 3
+
+	option = {
+		name = nte_global.1.a
+		default_option = yes
+		custom_tooltip = nte_global.1.a.tt
+	}
+}
+
+# 2: Continuous Proportional Revision Vote (-15% to +15%)
+nte_global.2 = {
+	type = country_event
+	placement = root
+	title = nte_global.2.t
+	desc = nte_global.2.d
+	flavor = nte_global.2.f
+
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	immediate = {
+		set_variable = nte_voted_revision_flag
+	}
+
+	option = {
+		name = nte_global.2.a # -15% Deep Disarmament
+		if = {
+			limit = { has_global_variable = gnl_voting_active }
+			change_global_variable = {
+				name = gnl_vote_weighted_sum
+				add = {
+					value = nte_country_vote_weight
+					multiply = -15
+				}
+			}
+			change_global_variable = {
+				name = gnl_vote_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				trigger = {
+					has_variable = nte_quota_usage_pct
+					var:nte_quota_usage_pct < 60
+				}
+				add = 20
+			}
+			modifier = {
+				trigger = {
+					OR = {
+						scaled_debt > 0.2
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				add = 20
+			}
+			modifier = {
+				trigger = { has_law_or_variant = law_type:law_professional_navy }
+				add = -10
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.2.b # -5% Moderate Reduction
+		if = {
+			limit = { has_global_variable = gnl_voting_active }
+			change_global_variable = {
+				name = gnl_vote_weighted_sum
+				add = {
+					value = nte_country_vote_weight
+					multiply = -5
+				}
+			}
+			change_global_variable = {
+				name = gnl_vote_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 20
+		}
+	}
+
+	option = {
+		name = nte_global.2.c # 0% Maintain Status Quo
+		default_option = yes
+		if = {
+			limit = { has_global_variable = gnl_voting_active }
+			change_global_variable = {
+				name = gnl_vote_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 35
+		}
+	}
+
+	option = {
+		name = nte_global.2.e # +5% Moderate Expansion
+		if = {
+			limit = { has_global_variable = gnl_voting_active }
+			change_global_variable = {
+				name = gnl_vote_weighted_sum
+				add = {
+					value = nte_country_vote_weight
+					multiply = 5
+				}
+			}
+			change_global_variable = {
+				name = gnl_vote_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 20
+			modifier = {
+				trigger = {
+					has_variable = nte_quota_usage_pct
+					var:nte_quota_usage_pct >= 85
+				}
+				add = 30
+			}
+			modifier = {
+				trigger = { has_law_or_variant = law_type:law_professional_navy }
+				add = 20
+			}
+			modifier = {
+				trigger = {
+					gold_reserves > 0
+					net_fixed_income > 0
+				}
+				add = 10
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.2.g # +15% Major Expansion
+		if = {
+			limit = { has_global_variable = gnl_voting_active }
+			change_global_variable = {
+				name = gnl_vote_weighted_sum
+				add = {
+					value = nte_country_vote_weight
+					multiply = 15
+				}
+			}
+			change_global_variable = {
+				name = gnl_vote_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				trigger = {
+					has_variable = nte_quota_usage_pct
+					var:nte_quota_usage_pct > 100
+				}
+				add = 50
+			}
+		}
+	}
+}
+
+# 3: Diplomatic Isolation Sanction Vote
+nte_global.3 = {
+	type = country_event
+	placement = root
+	title = nte_global.3.t
+	desc = nte_global.3.d
+	flavor = nte_global.3.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	immediate = {
+		set_variable = nte_iso_voted_flag
+		global_var:gnl_isolation_target ?= { save_scope_as = nte_iso_target }
+	}
+
+	option = {
+		name = nte_global.3.a # Vote YES to isolate target
+		if = {
+			limit = { has_global_variable = gnl_isolation_vote_active }
+			set_variable = nte_iso_voted_yes
+			change_global_variable = {
+				name = gnl_iso_yes_weight
+				add = nte_country_vote_weight
+			}
+			change_global_variable = {
+				name = gnl_iso_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					this = scope:nte_iso_target
+				}
+				add = -100
+			}
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					NOT = { this = scope:nte_iso_target }
+					"relations(scope:nte_iso_target)" < 0
+				}
+				add = 50
+			}
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					any_rival_country = { this = scope:nte_iso_target }
+				}
+				add = 40
+			}
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					OR = {
+						has_treaty_alliance_with = { TARGET = scope:nte_iso_target }
+						has_treaty_defensive_pact_with = { TARGET = scope:nte_iso_target }
+					}
+				}
+				add = -40
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.3.b # Vote NO
+		default_option = yes
+		if = {
+			limit = { has_global_variable = gnl_isolation_vote_active }
+			change_global_variable = {
+				name = gnl_iso_total_weight
+				add = nte_country_vote_weight
+			}
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					this = scope:nte_iso_target
+				}
+				add = 100
+			}
+			modifier = {
+				trigger = {
+					exists = scope:nte_iso_target
+					"relations(scope:nte_iso_target)" >= 20
+				}
+				add = 50
+			}
+		}
+	}
+}
+
+# 4: Revision Vote Result Announcement
+nte_global.4 = {
+	type = country_event
+	placement = root
+	title = nte_global.4.t
+	desc = nte_global.4.d
+	flavor = nte_global.4.f
+
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 2
+
+	option = {
+		name = nte_global.4.a
+		default_option = yes
+	}
+}
+
+# 5: Naval Holiday Initiative (3-Year Capital Construction Pause & Peace Dividend)
+nte_global.5 = {
+	type = country_event
+	placement = root
+	title = nte_global.5.t
+	desc = nte_global.5.d
+	flavor = nte_global.5.f
+
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	option = {
+		name = nte_global.5.a # Join the Naval Holiday
+		default_option = yes
+		add_modifier = { name = nte_naval_holiday_modifier years = 3 }
+		ig:ig_armed_forces ?= {
+			add_modifier = { name = nte_ig_navy_disappointed years = 2 }
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = { name = nte_ig_peace_dividend_happy years = 2 }
+		}
+		ai_chance = {
+			base = 65
+			modifier = {
+				trigger = { scaled_debt > 0.1 }
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.5.b # Decline the Naval Holiday
+		change_infamy = 3
+		add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+		ai_chance = {
+			base = 20
+			modifier = {
+				trigger = { is_at_war = yes }
+				add = 100
+			}
+			modifier = {
+				trigger = {
+					has_variable = nte_quota_usage_pct
+					var:nte_quota_usage_pct < 50
+				}
+				add = 30
+			}
+		}
+	}
+}
+
+# 6: Secret Tonnage Falsification Exposed!
+nte_global.6 = {
+	type = country_event
+	placement = root
+	title = nte_global.6.t
+	desc = nte_global.6.d
+	flavor = nte_global.6.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	option = {
+		name = nte_global.6.a
+		default_option = yes
+		change_infamy = 15
+		set_variable = { name = nte_falsification_caught_penalty months = 24 }
+		add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+		if = {
+			limit = { NOT = { has_modifier = nte_isolated_sanction_modifier } }
+			add_modifier = { name = global_naval_limitation_union_penalty years = 2 }
+		}
+		every_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { this = root }
+			}
+			change_relations = { country = root value = -25 }
+		}
+		nte_update_country_tonnage_vars = yes
+	}
+}
+
+# 7: Quinquennial International Naval Conference (Every 60 months)
+nte_global.7 = {
+	type = country_event
+	placement = root
+	title = nte_global.7.t
+	desc = nte_global.7.d
+	flavor = nte_global.7.f
+
+	event_image = {
+		video = "unspecific_diplomats_negotiating"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 3
+
+	option = {
+		name = nte_global.7.a # Reaffirm the Naval Treaty
+		default_option = yes
+		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			je:global_naval_limitation_union ?= {
+				add_progress = { value = 2 name = nte_treaty_stability_bar }
+			}
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = { name = nte_ig_peace_dividend_happy years = 2 }
+		}
+		ai_chance = {
+			base = 65
+		}
+	}
+
+	option = {
+		name = nte_global.7.b # Demand Baseline Expansion (+5%)
+		if = {
+			limit = {
+				exists = global_var:global_gnl_chair_country
+				this = global_var:global_gnl_chair_country
+			}
+			change_global_variable = { name = gnl_tonnage_base_limit multiply = 1.05 }
+			set_global_variable = {
+				name = gnl_tonnage_base_limit
+				value = {
+					value = global_var:gnl_tonnage_base_limit
+					round = yes
+					max = 1200
+				}
+			}
+			every_country = {
+				limit = { has_variable = gnl_participating_country }
+				nte_update_country_tonnage_vars = yes
+			}
+		}
+		else = {
+			add_modifier = { name = nte_escalator_clause_modifier years = 2 }
+			nte_update_country_tonnage_vars = yes
+		}
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			je:global_naval_limitation_union ?= {
+				add_progress = { value = -2 name = nte_treaty_stability_bar }
+			}
+		}
+		ig:ig_armed_forces ?= {
+			add_modifier = { name = nte_ig_navy_expansion_happy years = 2 }
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = { has_variable = nte_global_over_limit_flag }
+				add = 40
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.7.c # Walk Out of the Conference!
+		change_infamy = 8
+		add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+		je:global_naval_limitation_union ?= {
+			add_progress = { value = -15 name = nte_treaty_stability_bar }
+		}
+		set_variable = { name = nte_withdrawn_from_treaty months = 2 }
+		save_scope_as = withdrawing_country
+		nte_global_on_withdrawal = yes
+		ai_chance = {
+			base = 5
+			modifier = {
+				trigger = { infamy > 40 }
+				add = 20
+			}
+		}
+	}
+}
+
+# 8: Super-Heavy Capital Ship Qualitative Panic
+nte_global.8 = {
+	type = country_event
+	placement = root
+	title = nte_global.8.t
+	desc = nte_global.8.d
+	flavor = nte_global.8.f
+
+	event_image = {
+		video = "unspecific_naval_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 2
+
+	option = {
+		name = nte_global.8.a # Condemn Qualitative Escalation
+		default_option = yes
+		je:global_naval_limitation_union ?= {
+			add_progress = { value = -3 name = nte_treaty_stability_bar }
+		}
+		add_modifier = { name = nte_prestige_gain_modifier years = 1 }
+		ai_chance = {
+			base = 55
+			modifier = {
+				trigger = {
+					OR = {
+						has_law_or_variant = law_type:law_diplomatic_navy
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.8.b # Respond with Emergency Naval Budget
+		add_modifier = { name = nte_naval_race_panic_modifier years = 3 }
+		ig:ig_armed_forces ?= {
+			add_modifier = { name = nte_ig_navy_expansion_happy years = 2 }
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = { has_law_or_variant = law_type:law_professional_navy }
+				add = 45
+			}
+			modifier = {
+				trigger = { scaled_debt > 0.20 }
+				add = -20
+			}
+		}
+	}
+}
+
+# 9: Treaty Collapse - Return of the Unfettered Naval Arms Race
+nte_global.9 = {
+	type = country_event
+	placement = root
+	title = nte_global.9.t
+	desc = nte_global.9.d
+	flavor = nte_global.9.f
+
+	event_image = {
+		video = "unspecific_naval_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 3
+
+	option = {
+		name = nte_global.9.a
+		default_option = yes
+		add_modifier = { name = nte_naval_race_panic_modifier years = 5 }
+	}
+}
+
+# 10: Naval Overhaul Compatibility Flavor - 10-Slot Super-Capital Ships & Naval Arms Race
+nte_global.10 = {
+	type = country_event
+	placement = root
+	title = nte_global.10.t
+	desc = nte_global.10.d
+	flavor = nte_global.10.f
+
+	event_image = {
+		video = "unspecific_naval_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	duration = 3
+
+	option = {
+		name = nte_global.10.a # Accommodate modern multi-slot hulls (+10% global limit, -4 stability)
+		default_option = yes
+		if = {
+			limit = { has_global_variable = gnl_tonnage_base_limit }
+			change_global_variable = {
+				name = gnl_tonnage_base_limit
+				multiply = 1.10
+			}
+			set_global_variable = {
+				name = gnl_tonnage_base_limit
+				value = {
+					value = global_var:gnl_tonnage_base_limit
+					round = yes
+					max = 1200
+				}
+			}
+		}
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			je:global_naval_limitation_union ?= {
+				add_progress = { value = -2 name = nte_treaty_stability_bar }
+			}
+		}
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			nte_update_country_tonnage_vars = yes
+		}
+		ai_chance = {
+			base = 50
+			modifier = {
+				trigger = { has_law_or_variant = law_type:law_professional_navy }
+				add = 30
+			}
+		}
+	}
+
+	option = {
+		name = nte_global.10.b # Freeze multi-slot escalation and reinforce treaty inspection (+6 stability)
+		je:global_naval_limitation_union ?= {
+			add_progress = { value = 6 name = nte_treaty_stability_bar }
+		}
+		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
+		ai_chance = {
+			base = 30
+			modifier = {
+				trigger = {
+					OR = {
+						has_law_or_variant = law_type:law_diplomatic_navy
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				add = 40
+			}
+		}
+	}
+}
+

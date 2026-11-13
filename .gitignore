@@ -1,0 +1,13 @@
+# Local AI / editor / OS metadata
+.dsh-project-memory/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temporary backups
+*.log
+*.tmp
+*.bak
+*.swp

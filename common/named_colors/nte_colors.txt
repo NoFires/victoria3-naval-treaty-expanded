@@ -1,0 +1,8 @@
+﻿# Naval Treaty Expanded - 1.15 Journal Map Colors
+colors = {
+	nte_chair_gold = hsv { 0.12 0.85 0.95 }
+	nte_compliant_blue = hsv { 0.56 0.65 0.85 }
+	nte_grace_orange = hsv { 0.08 0.85 0.95 }
+	nte_sanctioned_red = hsv { 0.00 0.85 0.85 }
+	nte_escalator_purple = hsv { 0.78 0.65 0.80 }
+}

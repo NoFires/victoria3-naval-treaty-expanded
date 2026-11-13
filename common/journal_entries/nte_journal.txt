@@ -1,0 +1,256 @@
+﻿global_naval_limitation_union = {
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	group = global_naval_limitation_union_group
+
+	is_shown_when_inactive = {
+		always = no
+	}
+
+	possible = {
+		always = no
+	}
+
+	activation_description = {
+		custom_tooltip = {
+			text = nte_je_activation_tt
+			always = no
+		}
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = nte_je_status_escalator
+				trigger = {
+					has_global_variable = gnl_escalator_threat_active
+				}
+			}
+			triggered_desc = {
+				desc = nte_je_status_isolation_crisis
+				trigger = {
+					has_global_variable = gnl_isolation_vote_active
+				}
+			}
+			triggered_desc = {
+				desc = nte_je_status_voting
+				trigger = {
+					has_global_variable = gnl_voting_active
+				}
+			}
+			triggered_desc = {
+				desc = nte_je_status_holiday
+				trigger = {
+					has_global_variable = gnl_naval_holiday_active
+				}
+			}
+			triggered_desc = {
+				desc = nte_je_status_stable
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	# 1.15 Scripted Progress Bars
+	scripted_progress_bar = nte_treaty_stability_bar
+	scripted_progress_bar = nte_personal_quota_bar
+
+	# 1.15 Native Journal Map
+	map_color = {
+		if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+					OR = {
+						has_modifier = global_naval_limitation_union_penalty
+						has_modifier = nte_isolated_sanction_modifier
+					}
+				}
+			}
+			value = "nte_sanctioned_red"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+					has_modifier = nte_grace_period_warning_modifier
+				}
+			}
+			value = "nte_grace_orange"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					exists = global_var:global_gnl_chair_country
+					this = global_var:global_gnl_chair_country
+				}
+			}
+			value = "nte_chair_gold"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+				}
+			}
+			value = "nte_compliant_blue"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = nte_escalator_threat_country
+				}
+			}
+			value = "nte_escalator_purple"
+		}
+	}
+
+	map_tooltip = {
+		if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+					has_modifier = nte_isolated_sanction_modifier
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_isolated"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+					has_modifier = global_naval_limitation_union_penalty
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_breach"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+					has_modifier = nte_grace_period_warning_modifier
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_grace"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					exists = global_var:global_gnl_chair_country
+					this = global_var:global_gnl_chair_country
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_chair"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = gnl_participating_country
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_compliant"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = nte_escalator_threat_country
+				}
+			}
+			custom_tooltip_no_bullet = "nte_map_tt_escalator"
+		}
+	}
+
+	scripted_button = nte_btn_propose_revision_vote
+	scripted_button = nte_btn_propose_isolation_sanction
+	scripted_button = nte_btn_propose_naval_holiday
+	scripted_button = nte_btn_toggle_mothball_fleet
+	scripted_button = nte_btn_scrap_obsolete_hulls
+	scripted_button = nte_btn_submarine_protocol
+	scripted_button = nte_btn_naval_intelligence_exchange
+	scripted_button = nte_btn_falsify_tonnage
+	scripted_button = nte_btn_invoke_escalator_clause
+	scripted_button = nte_btn_peaceful_withdrawal
+
+	on_monthly_pulse = {
+		effect = {
+			# Only the chair country drives the global monthly calculation to avoid N-times duplication in multiplayer
+			if = {
+				limit = {
+					exists = global_var:global_gnl_chair_country
+					global_var:global_gnl_chair_country = {
+						has_variable = gnl_participating_country
+					}
+					this = global_var:global_gnl_chair_country
+				}
+				nte_global_treaty_monthly_pulse = yes
+			}
+			# Recovery fallback: if the chair was annexed or lost membership unexpectedly, highest-prestige survivor assumes chair
+			else_if = {
+				limit = {
+					has_global_variable = gnl_formed
+					has_variable = gnl_participating_country
+					OR = {
+						NOT = { exists = global_var:global_gnl_chair_country }
+						NOT = {
+							global_var:global_gnl_chair_country = {
+								is_country_alive = yes
+								has_variable = gnl_participating_country
+							}
+						}
+					}
+				}
+				ordered_country = {
+					limit = {
+						is_country_alive = yes
+						has_variable = gnl_participating_country
+					}
+					order_by = prestige
+					position = 0
+					set_global_variable = {
+						name = global_gnl_chair_country
+						value = this
+					}
+					# Only run pulse immediately if this country itself is the newly elected chair;
+					# otherwise wait for the new chair's own monthly pulse (or next tick) to avoid double execution.
+					if = {
+						limit = { this = root }
+						nte_global_treaty_monthly_pulse = yes
+					}
+				}
+			}
+		}
+	}
+
+	# 1.15 Outcome Previews & Resolution
+	outcome = {
+		header = nte_outcome_peace
+		effect_header = nte_outcome_peace_effect_header
+		color = "gold_positive"
+		conclusion_desc = nte_outcome_peace_desc
+		trigger = {
+			OR = {
+				NOT = { has_global_variable = gnl_formed }
+				NOT = { has_variable = gnl_participating_country }
+			}
+		}
+	}
+
+	outcome = {
+		header = nte_outcome_collapse
+		effect_header = nte_outcome_collapse_effect_header
+		color = "red"
+		conclusion_desc = nte_outcome_collapse_desc
+		trigger = {
+			scope:journal_entry ?= {
+				"scripted_bar_progress(nte_treaty_stability_bar)" <= 0
+			}
+		}
+		effect = {
+			nte_dissolve_global_treaty = yes
+		}
+	}
+
+	weight = 200
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
