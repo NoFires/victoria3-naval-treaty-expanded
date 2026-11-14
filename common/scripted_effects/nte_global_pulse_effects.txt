@@ -1,0 +1,869 @@
+﻿# Global Treaty Entry Into Force
+global_naval_limitation_on_start = {
+	if = {
+		limit = { NOT = { has_global_variable = gnl_formed } }
+		set_global_variable = gnl_formed
+		if = {
+			limit = {
+				scope:article_options.second_country.prestige > scope:article_options.first_country.prestige
+			}
+			set_global_variable = {
+				name = global_gnl_chair_country
+				value = scope:article_options.second_country
+			}
+		}
+		else = {
+			set_global_variable = {
+				name = global_gnl_chair_country
+				value = scope:article_options.first_country
+			}
+		}
+		set_global_variable = { name = gnl_stability_drift value = 1 }
+		set_global_variable = { name = gnl_treaty_stability value = 75 }
+		scope:article_options.first_country = {
+			debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=GNL_FORMED|first=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+	}
+
+	scope:article_options.first_country = {
+		set_variable = gnl_participating_country
+		if = {
+			limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
+			add_journal_entry = { type = global_naval_limitation_union }
+		}
+		if = {
+			limit = { NOT = { has_variable = nte_joined_notified } }
+			set_variable = nte_joined_notified
+			trigger_event = { id = nte_global.1 }
+		}
+	}
+	scope:article_options.second_country = {
+		set_variable = gnl_participating_country
+		if = {
+			limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
+			add_journal_entry = { type = global_naval_limitation_union }
+		}
+		if = {
+			limit = { NOT = { has_variable = nte_joined_notified } }
+			set_variable = nte_joined_notified
+			trigger_event = { id = nte_global.1 }
+		}
+	}
+
+	every_country = {
+		limit = { has_variable = gnl_participating_country }
+		save_scope_as = nte_member_temp
+		every_country = {
+			limit = { has_journal_entry = global_naval_limitation_union }
+			je:global_naval_limitation_union ?= {
+				add_involved_country = scope:nte_member_temp
+			}
+		}
+	}
+
+	if = {
+		limit = { NOT = { has_global_variable = gnl_tiers_initialized } }
+		set_global_variable = gnl_tiers_initialized
+		nte_assign_locked_tiers = yes
+	}
+	else = {
+		every_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { has_variable = nte_locked_tier_ratio }
+			}
+			set_variable = { name = nte_current_tonnage value = nte_country_effective_tonnage }
+			if = {
+				limit = {
+					country_rank >= rank_value:great_power
+					NOT = { exists = global_var:gnl_rank1_country }
+				}
+				set_global_variable = { name = gnl_rank1_country value = this }
+				set_variable = { name = nte_locked_tier_rank value = 1 }
+				set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			}
+			else_if = {
+				limit = {
+					country_rank >= rank_value:great_power
+					NOT = { exists = global_var:gnl_rank2_country }
+				}
+				set_global_variable = { name = gnl_rank2_country value = this }
+				set_variable = { name = nte_locked_tier_rank value = 2 }
+				set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			}
+			else_if = {
+				limit = {
+					NOT = { exists = global_var:gnl_rank3_country }
+				}
+				set_global_variable = { name = gnl_rank3_country value = this }
+				set_variable = { name = nte_locked_tier_rank value = 3 }
+				set_variable = { name = nte_locked_tier_ratio value = 1.00 }
+			}
+			else_if = {
+				limit = {
+					NOT = { exists = global_var:gnl_rank4_country }
+				}
+				set_global_variable = { name = gnl_rank4_country value = this }
+				set_variable = { name = nte_locked_tier_rank value = 4 }
+				set_variable = { name = nte_locked_tier_ratio value = 0.58 }
+			}
+			else_if = {
+				limit = {
+					NOT = { exists = global_var:gnl_rank5_country }
+				}
+				set_global_variable = { name = gnl_rank5_country value = this }
+				set_variable = { name = nte_locked_tier_rank value = 5 }
+				set_variable = { name = nte_locked_tier_ratio value = 0.58 }
+			}
+			else = {
+				set_variable = { name = nte_locked_tier_rank value = 6 }
+				set_variable = { name = nte_locked_tier_ratio value = 0.45 }
+			}
+			nte_update_country_tonnage_vars = yes
+		}
+	}
+	nte_sync_global_stability_bars = yes
+}
+
+# Global Treaty Safe Withdrawal & Chair Handover Fix
+nte_global_on_withdrawal = {
+	if = {
+		limit = { exists = scope:withdrawing_country }
+		scope:withdrawing_country = { save_scope_as = nte_leaving_country }
+	}
+	else_if = {
+		limit = {
+			exists = scope:article.first_country
+			scope:article.first_country = {
+				OR = {
+					has_variable = nte_withdrawn_from_treaty
+					is_country_alive = no
+					country_rank < rank_value:major_power
+					is_subject = yes
+				}
+			}
+		}
+		scope:article.first_country = { save_scope_as = nte_leaving_country }
+	}
+	else_if = {
+		limit = {
+			exists = scope:article.second_country
+			scope:article.second_country = {
+				OR = {
+					has_variable = nte_withdrawn_from_treaty
+					is_country_alive = no
+					country_rank < rank_value:major_power
+					is_subject = yes
+				}
+			}
+		}
+		scope:article.second_country = { save_scope_as = nte_leaving_country }
+	}
+	else_if = {
+		limit = {
+			exists = scope:article_options.first_country
+			scope:article_options.first_country = {
+				OR = {
+					has_variable = nte_withdrawn_from_treaty
+					is_country_alive = no
+					country_rank < rank_value:major_power
+					is_subject = yes
+				}
+			}
+		}
+		scope:article_options.first_country = { save_scope_as = nte_leaving_country }
+	}
+	else_if = {
+		limit = {
+			exists = scope:article_options.second_country
+			scope:article_options.second_country = {
+				OR = {
+					has_variable = nte_withdrawn_from_treaty
+					is_country_alive = no
+					country_rank < rank_value:major_power
+					is_subject = yes
+				}
+			}
+		}
+		scope:article_options.second_country = { save_scope_as = nte_leaving_country }
+	}
+
+	if = {
+		limit = {
+			exists = scope:nte_leaving_country
+			scope:nte_leaving_country = { has_variable = gnl_participating_country }
+		}
+		scope:nte_leaving_country = {
+			remove_variable = gnl_participating_country
+			remove_variable = nte_joined_notified
+			remove_variable = nte_grace_months
+			remove_variable = nte_global_near_limit_flag
+			remove_variable = nte_global_over_limit_flag
+			remove_variable = nte_locked_tier_ratio
+			remove_variable = nte_locked_tier_rank
+			remove_variable = nte_current_tonnage
+			remove_variable = nte_current_legal_limit
+			remove_variable = nte_tonnage_remaining
+			remove_variable = nte_quota_usage_pct
+			remove_variable = nte_qualitative_breach_flag
+			remove_variable = nte_qualitative_panic_sent
+			remove_variable = nte_tonnage_falsification_active
+			remove_variable = nte_falsification_caught_penalty
+			remove_variable = nte_scrapping_program_active
+			remove_variable = nte_voted_revision_flag
+			remove_variable = nte_iso_voted_flag
+			remove_variable = nte_iso_voted_yes
+			remove_variable = nte_mothball_cooldown
+			remove_variable = nte_intel_cooldown
+			remove_variable = nte_falsification_cooldown
+			remove_variable = nte_scrap_cooldown
+			remove_variable = nte_escalator_threat_country
+			remove_variable = nte_escalator_clause_active
+			remove_variable = nte_country_holiday_accepted
+			remove_variable = nte_submarine_protocol_active
+			nte_clear_all_global_modifiers = yes
+		}
+
+		every_country = {
+			limit = { has_journal_entry = global_naval_limitation_union }
+			je:global_naval_limitation_union ?= {
+				remove_involved_country = scope:nte_leaving_country
+			}
+		}
+
+		if = {
+			limit = { global_var:gnl_rank1_country ?= scope:nte_leaving_country }
+			remove_global_variable = gnl_rank1_country
+		}
+		if = {
+			limit = { global_var:gnl_rank2_country ?= scope:nte_leaving_country }
+			remove_global_variable = gnl_rank2_country
+		}
+		if = {
+			limit = { global_var:gnl_rank3_country ?= scope:nte_leaving_country }
+			remove_global_variable = gnl_rank3_country
+		}
+		if = {
+			limit = { global_var:gnl_rank4_country ?= scope:nte_leaving_country }
+			remove_global_variable = gnl_rank4_country
+		}
+		if = {
+			limit = { global_var:gnl_rank5_country ?= scope:nte_leaving_country }
+			remove_global_variable = gnl_rank5_country
+		}
+
+		if = {
+			limit = {
+				exists = global_var:global_gnl_chair_country
+				global_var:global_gnl_chair_country = scope:nte_leaving_country
+			}
+			if = {
+				limit = {
+					any_country = {
+						has_variable = gnl_participating_country
+						NOT = { this = scope:nte_leaving_country }
+					}
+				}
+				ordered_country = {
+					limit = {
+						has_variable = gnl_participating_country
+						NOT = { this = scope:nte_leaving_country }
+					}
+					order_by = prestige
+					position = 0
+					set_global_variable = {
+						name = global_gnl_chair_country
+						value = this
+					}
+				}
+			}
+			else = {
+				nte_dissolve_global_treaty = yes
+			}
+		}
+	}
+}
+
+# Executed on intentional diplomatic break (runs in addition to on_withdrawal)
+nte_global_on_break_penalty = {
+	if = {
+		limit = {
+			exists = scope:withdrawing_country
+			NOT = { scope:withdrawing_country = { has_variable = nte_withdrawn_from_treaty } }
+		}
+		scope:withdrawing_country = {
+			set_variable = { name = nte_withdrawn_from_treaty months = 2 }
+			if = {
+				limit = { NOT = { has_global_variable = gnl_escalator_threat_active } }
+				change_infamy = 5
+				add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
+				add_modifier = { name = nte_withdrawal_cost_modifier years = 2 }
+			}
+		}
+		if = {
+			limit = { has_global_variable = gnl_formed }
+			if = {
+				limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+				set_global_variable = { name = gnl_treaty_stability value = 75 }
+			}
+			change_global_variable = { name = gnl_treaty_stability add = -10 }
+			nte_sync_global_stability_bars = yes
+			if = {
+				limit = { global_var:gnl_treaty_stability <= 0 }
+				nte_dissolve_global_treaty = yes
+			}
+		}
+	}
+}
+
+nte_dissolve_global_treaty = {
+	if = {
+		limit = { has_global_variable = gnl_formed }
+		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=GNL_DISSOLVED"
+		set_global_variable = { name = gnl_dissolved_flag months = 36 }
+		remove_global_variable = gnl_formed
+		remove_global_variable = gnl_tiers_initialized
+		remove_global_variable = global_gnl_chair_country
+		remove_global_variable = gnl_tonnage_base_limit
+		remove_global_variable = gnl_voting_active
+		remove_global_variable = gnl_voting_months_left
+		remove_global_variable = gnl_isolation_vote_active
+		remove_global_variable = gnl_isolation_months_left
+		remove_global_variable = gnl_vote_weighted_sum
+		remove_global_variable = gnl_vote_total_weight
+		remove_global_variable = gnl_iso_yes_weight
+		remove_global_variable = gnl_iso_total_weight
+		remove_global_variable = gnl_isolation_target
+		remove_global_variable = gnl_escalator_threat_active
+		remove_global_variable = gnl_conference_months
+		remove_global_variable = gnl_conference_pending
+		remove_global_variable = gnl_conf_reaffirm_weight
+		remove_global_variable = gnl_conf_expand_weight
+		remove_global_variable = gnl_revision_cooldown
+		remove_global_variable = gnl_isolation_cooldown
+		remove_global_variable = gnl_holiday_cooldown
+		remove_global_variable = gnl_naval_holiday_active
+		remove_global_variable = gnl_last_vote_pct_change
+		remove_global_variable = gnl_stability_drift
+		remove_global_variable = gnl_treaty_stability
+		remove_global_variable = gnl_rank1_country
+		remove_global_variable = gnl_rank2_country
+		remove_global_variable = gnl_rank3_country
+		remove_global_variable = gnl_rank4_country
+		remove_global_variable = gnl_rank5_country
+		every_country = {
+			if = {
+				limit = { has_variable = gnl_participating_country }
+				trigger_event = { id = nte_global.9 }
+			}
+			remove_variable = gnl_participating_country
+			remove_variable = nte_joined_notified
+			remove_variable = nte_grace_months
+			remove_variable = nte_global_near_limit_flag
+			remove_variable = nte_global_over_limit_flag
+			remove_variable = nte_locked_tier_ratio
+			remove_variable = nte_locked_tier_rank
+			remove_variable = nte_current_tonnage
+			remove_variable = nte_current_legal_limit
+			remove_variable = nte_tonnage_remaining
+			remove_variable = nte_quota_usage_pct
+			remove_variable = nte_qualitative_breach_flag
+			remove_variable = nte_qualitative_panic_sent
+			remove_variable = nte_tonnage_falsification_active
+			remove_variable = nte_falsification_caught_penalty
+			remove_variable = nte_scrapping_program_active
+			remove_variable = nte_voted_revision_flag
+			remove_variable = nte_iso_voted_flag
+			remove_variable = nte_iso_voted_yes
+			remove_variable = nte_mothball_cooldown
+			remove_variable = nte_intel_cooldown
+			remove_variable = nte_falsification_cooldown
+			remove_variable = nte_scrap_cooldown
+			remove_variable = nte_escalator_threat_country
+			remove_variable = nte_escalator_clause_active
+			remove_variable = nte_country_holiday_accepted
+			remove_variable = nte_submarine_protocol_active
+			nte_clear_all_global_modifiers = yes
+		}
+	}
+}
+
+# Monthly Global Pulse (executed ONLY by chair country)
+nte_global_treaty_monthly_pulse = {
+	set_local_variable = { name = breach_count value = 0 }
+	set_local_variable = { name = qualitative_breach_count value = 0 }
+	set_local_variable = { name = member_count value = 0 }
+
+	# 1. Update all members' tonnage, alerts, grace periods, and modifiers
+	every_country = {
+		limit = {
+			is_country_alive = yes
+			has_variable = gnl_participating_country
+		}
+		change_local_variable = { name = member_count add = 1 }
+		if = {
+			limit = {
+				is_at_war = yes
+				has_modifier = nte_mothballed_fleet_modifier
+			}
+			remove_modifier = nte_mothballed_fleet_modifier
+			set_variable = { name = nte_mothball_cooldown months = 6 }
+		}
+		nte_update_country_tonnage_vars = yes
+
+		# Qualitative super-heavy ship check (adapts to 10-slot Naval Overhaul mod when detected)
+		if = {
+			limit = {
+				any_scope_ship = {
+					ship_group = ship_group:ship_group_capital_ships
+					OR = {
+						AND = {
+							has_global_variable = nte_naval_overhaul_detected
+							OR = {
+								hit_points >= 7800
+								power_projection >= 640
+							}
+						}
+						AND = {
+							NOT = { has_global_variable = nte_naval_overhaul_detected }
+							OR = {
+								hit_points >= 6800
+								power_projection >= 595
+							}
+						}
+					}
+				}
+			}
+			set_variable = nte_qualitative_breach_flag
+			change_local_variable = { name = qualitative_breach_count add = 1 }
+			if = {
+				limit = { NOT = { has_variable = nte_qualitative_panic_sent } }
+				set_variable = nte_qualitative_panic_sent
+				save_scope_as = nte_super_heavy_builder
+				every_country = {
+					limit = {
+						has_variable = gnl_participating_country
+						NOT = { this = scope:nte_super_heavy_builder }
+					}
+					trigger_event = { id = nte_global.8 days = 2 }
+				}
+			}
+		}
+		else = {
+			remove_variable = nte_qualitative_breach_flag
+			remove_variable = nte_qualitative_panic_sent
+		}
+
+		# Secret tonnage falsification exposure roll
+		if = {
+			limit = { has_variable = nte_tonnage_falsification_active }
+			if = {
+				limit = {
+					OR = {
+						has_variable = nte_qualitative_breach_flag
+						any_country = {
+							has_variable = gnl_participating_country
+							NOT = { this = prev }
+							has_modifier = nte_naval_intelligence_exchange_modifier
+						}
+					}
+				}
+				random = {
+					chance = 12
+					remove_variable = nte_tonnage_falsification_active
+					if = { limit = { has_modifier = nte_falsification_cost_modifier } remove_modifier = nte_falsification_cost_modifier }
+					trigger_event = { id = nte_global.6 }
+				}
+			}
+			else = {
+				random = {
+					chance = 5
+					remove_variable = nte_tonnage_falsification_active
+					if = { limit = { has_modifier = nte_falsification_cost_modifier } remove_modifier = nte_falsification_cost_modifier }
+					trigger_event = { id = nte_global.6 }
+				}
+			}
+		}
+
+		if = {
+			limit = { var:nte_current_tonnage > var:nte_current_legal_limit }
+			set_variable = nte_global_over_limit_flag
+			remove_variable = nte_global_near_limit_flag
+			if = { limit = { has_modifier = global_naval_limitation_union_bonus } remove_modifier = global_naval_limitation_union_bonus }
+			if = { limit = { has_modifier = nte_capital_ship_construction_slowdown } remove_modifier = nte_capital_ship_construction_slowdown }
+
+			if = {
+				limit = { NOT = { has_variable = nte_grace_months } }
+				set_variable = { name = nte_grace_months value = 1 }
+			}
+			else = {
+				change_variable = { name = nte_grace_months add = 1 }
+			}
+
+			if = {
+				limit = { var:nte_grace_months <= 4 }
+				if = {
+					limit = {
+						NOR = {
+							has_modifier = global_naval_limitation_union_penalty
+							has_modifier = nte_isolated_sanction_modifier
+						}
+					}
+					add_modifier = { name = nte_grace_period_warning_modifier months = 2 }
+				}
+			}
+			else = {
+				change_local_variable = { name = breach_count add = 1 }
+				if = { limit = { has_modifier = nte_grace_period_warning_modifier } remove_modifier = nte_grace_period_warning_modifier }
+				if = {
+					limit = { NOT = { has_modifier = nte_isolated_sanction_modifier } }
+					add_modifier = { name = global_naval_limitation_union_penalty months = 2 }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				var:nte_current_tonnage >= {
+					value = var:nte_current_legal_limit
+					multiply = 0.90
+				}
+			}
+			set_variable = nte_global_near_limit_flag
+			remove_variable = nte_global_over_limit_flag
+			remove_variable = nte_grace_months
+			if = { limit = { has_modifier = nte_capital_ship_construction_slowdown } remove_modifier = nte_capital_ship_construction_slowdown }
+			if = { limit = { has_modifier = nte_grace_period_warning_modifier } remove_modifier = nte_grace_period_warning_modifier }
+			if = {
+				limit = {
+					NOT = { has_variable = nte_falsification_caught_penalty }
+					has_modifier = global_naval_limitation_union_penalty
+				}
+				remove_modifier = global_naval_limitation_union_penalty
+			}
+			if = {
+				limit = {
+					NOR = {
+						has_modifier = nte_isolated_sanction_modifier
+						has_variable = nte_falsification_caught_penalty
+					}
+				}
+				add_modifier = { name = global_naval_limitation_union_bonus months = 2 }
+			}
+		}
+		else = {
+			remove_variable = nte_global_near_limit_flag
+			remove_variable = nte_global_over_limit_flag
+			remove_variable = nte_grace_months
+			if = { limit = { has_modifier = nte_capital_ship_construction_slowdown } remove_modifier = nte_capital_ship_construction_slowdown }
+			if = { limit = { has_modifier = nte_grace_period_warning_modifier } remove_modifier = nte_grace_period_warning_modifier }
+			if = {
+				limit = {
+					NOT = { has_variable = nte_falsification_caught_penalty }
+					has_modifier = global_naval_limitation_union_penalty
+				}
+				remove_modifier = global_naval_limitation_union_penalty
+			}
+			if = {
+				limit = {
+					NOR = {
+						has_modifier = nte_isolated_sanction_modifier
+						has_variable = nte_falsification_caught_penalty
+					}
+				}
+				add_modifier = { name = global_naval_limitation_union_bonus months = 2 }
+			}
+		}
+	}
+
+	# 2. Check non-member Escalator Clause threats (uses O(1) cached tonnage)
+	remove_global_variable = gnl_escalator_threat_active
+	every_country = { remove_variable = nte_escalator_threat_country }
+	if = {
+		limit = {
+			exists = global_var:gnl_rank2_country
+			global_var:gnl_rank2_country = {
+				has_variable = gnl_participating_country
+				has_variable = nte_current_legal_limit
+			}
+		}
+		global_var:gnl_rank2_country = {
+			set_local_variable = {
+				name = escalator_threshold
+				value = {
+					value = var:nte_current_legal_limit
+					multiply = 0.80
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			exists = global_var:gnl_rank1_country
+			global_var:gnl_rank1_country = {
+				has_variable = gnl_participating_country
+				has_variable = nte_current_legal_limit
+			}
+		}
+		global_var:gnl_rank1_country = {
+			set_local_variable = {
+				name = escalator_threshold
+				value = {
+					value = var:nte_current_legal_limit
+					multiply = 0.80
+				}
+			}
+		}
+	}
+	if = {
+		limit = { exists = local_var:escalator_threshold }
+		every_country = {
+			limit = {
+				NOT = { has_variable = gnl_participating_country }
+				country_rank >= rank_value:major_power
+				nte_country_cached_effective_tonnage > local_var:escalator_threshold
+			}
+			set_variable = nte_escalator_threat_country
+			set_global_variable = gnl_escalator_threat_active
+		}
+	}
+
+	# 3. Update Treaty Stability Drift & Sync SSOT Stability across all signatories
+	set_global_variable = {
+		name = gnl_stability_drift
+		value = {
+			value = 2
+			subtract = {
+				value = local_var:breach_count
+				multiply = 4
+			}
+			subtract = {
+				value = local_var:qualitative_breach_count
+				multiply = 2
+			}
+			if = {
+				limit = { has_global_variable = gnl_escalator_threat_active }
+				subtract = 3
+			}
+			min = -15
+			max = 4
+		}
+	}
+	if = {
+		limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+		set_global_variable = { name = gnl_treaty_stability value = 75 }
+	}
+	change_global_variable = {
+		name = gnl_treaty_stability
+		add = {
+			value = global_var:gnl_stability_drift
+			divide = 12
+		}
+	}
+	nte_sync_global_stability_bars = yes
+
+	# 4. Continuous Proportional Revision Vote countdown
+	if = {
+		limit = { has_global_variable = gnl_voting_active }
+		change_global_variable = { name = gnl_voting_months_left subtract = 1 }
+		if = {
+			limit = { global_var:gnl_voting_months_left <= 0 }
+			nte_resolve_revision_vote = yes
+		}
+	}
+
+	# 5. Quinquennial International Naval Conference (Every 60 months, two-stage tally)
+	if = {
+		limit = { NOT = { has_global_variable = gnl_conference_months } }
+		set_global_variable = { name = gnl_conference_months value = 1 }
+	}
+	else = {
+		change_global_variable = { name = gnl_conference_months add = 1 }
+	}
+	if = {
+		limit = { global_var:gnl_conference_months >= 60 }
+		set_global_variable = { name = gnl_conference_months value = 0 }
+		set_global_variable = { name = gnl_conference_pending value = 2 }
+		set_global_variable = { name = gnl_conf_reaffirm_weight value = 0 }
+		set_global_variable = { name = gnl_conf_expand_weight value = 0 }
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			trigger_event = { id = nte_global.7 days = 3 }
+		}
+	}
+	if = {
+		limit = { has_global_variable = gnl_conference_pending }
+		change_global_variable = { name = gnl_conference_pending subtract = 1 }
+		if = {
+			limit = { global_var:gnl_conference_pending <= 0 }
+			nte_resolve_quinquennial_conference = yes
+		}
+	}
+
+	# 6. Diplomatic Isolation Vote countdown
+	if = {
+		limit = { has_global_variable = gnl_isolation_vote_active }
+		change_global_variable = { name = gnl_isolation_months_left subtract = 1 }
+		if = {
+			limit = { global_var:gnl_isolation_months_left <= 0 }
+			nte_resolve_isolation_vote = yes
+		}
+	}
+
+	# 7. Auto-dissolve if fewer than 2 living members remain or stability reached 0
+	if = {
+		limit = {
+			OR = {
+				local_var:member_count < 2
+				AND = {
+					has_global_variable = gnl_treaty_stability
+					global_var:gnl_treaty_stability <= 0
+				}
+			}
+		}
+		nte_dissolve_global_treaty = yes
+	}
+}
+
+# Resolve Quinquennial Conference Two-Stage Weighted Tally
+nte_resolve_quinquennial_conference = {
+	remove_global_variable = gnl_conference_pending
+	if = {
+		limit = {
+			exists = global_var:gnl_conf_expand_weight
+			exists = global_var:gnl_conf_reaffirm_weight
+			global_var:gnl_conf_expand_weight > global_var:gnl_conf_reaffirm_weight
+		}
+		if = {
+			limit = { has_global_variable = gnl_tonnage_base_limit }
+			change_global_variable = { name = gnl_tonnage_base_limit multiply = 1.05 }
+			set_global_variable = {
+				name = gnl_tonnage_base_limit
+				value = {
+					value = global_var:gnl_tonnage_base_limit
+					round = yes
+					max = 1200
+				}
+			}
+		}
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
+		}
+		change_global_variable = { name = gnl_treaty_stability add = -4 }
+		every_country = {
+			limit = { has_variable = gnl_participating_country }
+			nte_update_country_tonnage_vars = yes
+		}
+	}
+	else_if = {
+		limit = {
+			exists = global_var:gnl_conf_reaffirm_weight
+			global_var:gnl_conf_reaffirm_weight > 0
+		}
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
+		}
+		change_global_variable = { name = gnl_treaty_stability add = 3 }
+	}
+	nte_sync_global_stability_bars = yes
+	remove_global_variable = gnl_conf_reaffirm_weight
+	remove_global_variable = gnl_conf_expand_weight
+}
+
+# Resolve Continuous Proportional Revision Vote (-15% to +15% weighted average)
+nte_resolve_revision_vote = {
+	remove_global_variable = gnl_voting_active
+	if = {
+		limit = {
+			exists = global_var:gnl_vote_total_weight
+			global_var:gnl_vote_total_weight > 0
+		}
+		set_local_variable = {
+			name = avg_pct_change
+			value = {
+				value = global_var:gnl_vote_weighted_sum
+				divide = global_var:gnl_vote_total_weight
+			}
+		}
+		set_global_variable = {
+			name = gnl_last_vote_pct_change
+			value = {
+				value = local_var:avg_pct_change
+				round = yes
+			}
+		}
+		set_global_variable = {
+			name = gnl_tonnage_base_limit
+			value = {
+				value = global_var:gnl_tonnage_base_limit
+				multiply = {
+					value = 1
+					add = {
+						value = local_var:avg_pct_change
+						divide = 100
+					}
+				}
+				min = 80
+				max = 1200
+				round = yes
+			}
+		}
+	}
+	else = {
+		set_global_variable = { name = gnl_last_vote_pct_change value = 0 }
+	}
+	remove_global_variable = gnl_vote_weighted_sum
+	remove_global_variable = gnl_vote_total_weight
+	remove_global_variable = gnl_voting_months_left
+	nte_assign_locked_tiers = yes
+	every_country = {
+		limit = { has_variable = gnl_participating_country }
+		nte_update_country_tonnage_vars = yes
+		remove_variable = nte_voted_revision_flag
+		trigger_event = { id = nte_global.4 }
+	}
+}
+
+# Resolve Diplomatic Isolation Sanction Vote
+nte_resolve_isolation_vote = {
+	remove_global_variable = gnl_isolation_vote_active
+	remove_global_variable = gnl_isolation_months_left
+	if = {
+		limit = {
+			exists = global_var:gnl_isolation_target
+			global_var:gnl_isolation_target = {
+				is_country_alive = yes
+				has_variable = gnl_participating_country
+			}
+			exists = global_var:gnl_iso_total_weight
+			global_var:gnl_iso_total_weight > 0
+		}
+		set_local_variable = {
+			name = iso_support_ratio
+			value = {
+				value = global_var:gnl_iso_yes_weight
+				divide = global_var:gnl_iso_total_weight
+			}
+		}
+		if = {
+			limit = { local_var:iso_support_ratio >= 0.75 }
+			global_var:gnl_isolation_target = {
+				add_modifier = { name = nte_isolated_sanction_modifier years = 3 }
+				if = { limit = { has_modifier = global_naval_limitation_union_bonus } remove_modifier = global_naval_limitation_union_bonus }
+				if = { limit = { has_modifier = global_naval_limitation_union_penalty } remove_modifier = global_naval_limitation_union_penalty }
+				every_country = {
+					limit = { has_variable = nte_iso_voted_yes }
+					change_relations = { country = prev value = -35 }
+				}
+			}
+		}
+	}
+	every_country = {
+		remove_variable = nte_iso_voted_yes
+		remove_variable = nte_iso_voted_flag
+	}
+	remove_global_variable = gnl_iso_yes_weight
+	remove_global_variable = gnl_iso_total_weight
+	remove_global_variable = gnl_isolation_target
+}

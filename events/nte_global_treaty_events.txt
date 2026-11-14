@@ -332,6 +332,7 @@ nte_global.5 = {
 		name = nte_global.5.a # Join the Naval Holiday
 		default_option = yes
 		add_modifier = { name = nte_naval_holiday_modifier years = 3 }
+		set_variable = { name = nte_country_holiday_accepted years = 3 }
 		ig:ig_armed_forces ?= {
 			add_modifier = { name = nte_ig_navy_disappointed years = 2 }
 		}
@@ -419,18 +420,23 @@ nte_global.7 = {
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 	icon = "gfx/interface/icons/event_icons/event_scales.dds"
-	duration = 3
+	duration = 1
 
 	option = {
 		name = nte_global.7.a # Reaffirm the Naval Treaty
 		default_option = yes
-		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
-		every_country = {
-			limit = { has_variable = gnl_participating_country }
-			je:global_naval_limitation_union ?= {
-				add_progress = { value = 2 name = nte_treaty_stability_bar }
+		if = {
+			limit = { has_global_variable = gnl_conference_pending }
+			if = {
+				limit = { NOT = { has_global_variable = gnl_conf_reaffirm_weight } }
+				set_global_variable = { name = gnl_conf_reaffirm_weight value = 0 }
+			}
+			change_global_variable = {
+				name = gnl_conf_reaffirm_weight
+				add = nte_country_vote_weight
 			}
 		}
+		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
 		ig:ig_intelligentsia ?= {
 			add_modifier = { name = nte_ig_peace_dividend_happy years = 2 }
 		}
@@ -442,32 +448,14 @@ nte_global.7 = {
 	option = {
 		name = nte_global.7.b # Demand Baseline Expansion (+5%)
 		if = {
-			limit = {
-				exists = global_var:global_gnl_chair_country
-				this = global_var:global_gnl_chair_country
+			limit = { has_global_variable = gnl_conference_pending }
+			if = {
+				limit = { NOT = { has_global_variable = gnl_conf_expand_weight } }
+				set_global_variable = { name = gnl_conf_expand_weight value = 0 }
 			}
-			change_global_variable = { name = gnl_tonnage_base_limit multiply = 1.05 }
-			set_global_variable = {
-				name = gnl_tonnage_base_limit
-				value = {
-					value = global_var:gnl_tonnage_base_limit
-					round = yes
-					max = 1200
-				}
-			}
-			every_country = {
-				limit = { has_variable = gnl_participating_country }
-				nte_update_country_tonnage_vars = yes
-			}
-		}
-		else = {
-			add_modifier = { name = nte_escalator_clause_modifier years = 2 }
-			nte_update_country_tonnage_vars = yes
-		}
-		every_country = {
-			limit = { has_variable = gnl_participating_country }
-			je:global_naval_limitation_union ?= {
-				add_progress = { value = -2 name = nte_treaty_stability_bar }
+			change_global_variable = {
+				name = gnl_conf_expand_weight
+				add = nte_country_vote_weight
 			}
 		}
 		ig:ig_armed_forces ?= {
@@ -486,12 +474,23 @@ nte_global.7 = {
 		name = nte_global.7.c # Walk Out of the Conference!
 		change_infamy = 8
 		add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
-		je:global_naval_limitation_union ?= {
-			add_progress = { value = -15 name = nte_treaty_stability_bar }
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = -15 }
+		nte_sync_global_stability_bars = yes
 		set_variable = { name = nte_withdrawn_from_treaty months = 2 }
 		save_scope_as = withdrawing_country
 		nte_global_on_withdrawal = yes
+		if = {
+			limit = {
+				has_global_variable = gnl_formed
+				has_global_variable = gnl_treaty_stability
+				global_var:gnl_treaty_stability <= 0
+			}
+			nte_dissolve_global_treaty = yes
+		}
 		ai_chance = {
 			base = 5
 			modifier = {
@@ -521,9 +520,12 @@ nte_global.8 = {
 	option = {
 		name = nte_global.8.a # Condemn Qualitative Escalation
 		default_option = yes
-		je:global_naval_limitation_union ?= {
-			add_progress = { value = -3 name = nte_treaty_stability_bar }
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = -1 }
+		nte_sync_global_stability_bars = yes
 		add_modifier = { name = nte_prestige_gain_modifier years = 1 }
 		ai_chance = {
 			base = 55
@@ -599,7 +601,7 @@ nte_global.10 = {
 	duration = 3
 
 	option = {
-		name = nte_global.10.a # Accommodate modern multi-slot hulls (+10% global limit, -4 stability)
+		name = nte_global.10.a # Accommodate modern multi-slot hulls (+10% global limit, -2 stability)
 		default_option = yes
 		if = {
 			limit = { has_global_variable = gnl_tonnage_base_limit }
@@ -616,12 +618,12 @@ nte_global.10 = {
 				}
 			}
 		}
-		every_country = {
-			limit = { has_variable = gnl_participating_country }
-			je:global_naval_limitation_union ?= {
-				add_progress = { value = -2 name = nte_treaty_stability_bar }
-			}
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = -2 }
+		nte_sync_global_stability_bars = yes
 		every_country = {
 			limit = { has_variable = gnl_participating_country }
 			nte_update_country_tonnage_vars = yes
@@ -637,9 +639,12 @@ nte_global.10 = {
 
 	option = {
 		name = nte_global.10.b # Freeze multi-slot escalation and reinforce treaty inspection (+6 stability)
-		je:global_naval_limitation_union ?= {
-			add_progress = { value = 6 name = nte_treaty_stability_bar }
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = 6 }
+		nte_sync_global_stability_bars = yes
 		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
 		ai_chance = {
 			base = 30

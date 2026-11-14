@@ -1,8 +1,8 @@
-name = "Naval Treaty & Overhaul Compatibility"
+﻿name = "Naval Treaty & Overhaul Compatibility"
 path = "dlc/dlc_nte_overhaul"
-steam_id = "529340"
+steam_id = "3726415174"
 pops_id = "dlc_nte_overhaul"
 mp_synced = yes
-affects_save_compatibility = yes
+affects_save_compatibility = no
 localizable_name = "dlc_nte_overhaul"
 checksum = ""

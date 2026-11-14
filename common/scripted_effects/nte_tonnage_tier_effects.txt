@@ -1,0 +1,215 @@
+﻿# Refresh O(1) tonnage cache and country quota vars
+nte_update_country_tonnage_vars = {
+	set_variable = {
+		name = nte_current_tonnage
+		value = nte_country_effective_tonnage
+	}
+	set_variable = {
+		name = nte_cached_tonnage
+		value = var:nte_current_tonnage
+		months = 2
+	}
+	set_variable = {
+		name = nte_current_legal_limit
+		value = nte_global_legal_limit
+	}
+	set_variable = {
+		name = nte_tonnage_remaining
+		value = {
+			value = var:nte_current_legal_limit
+			subtract = var:nte_current_tonnage
+		}
+	}
+	set_variable = {
+		name = nte_quota_usage_pct
+		value = nte_personal_quota_usage_pct
+	}
+	je:global_naval_limitation_union ?= {
+		set_bar_progress = {
+			value = prev.var:nte_quota_usage_pct
+			name = nte_personal_quota_bar
+		}
+	}
+}
+
+# Assign locked tiers (5:5:3:1.75:1.75:1.35 -> 1.67 / 1.67 / 1.00 / 0.58 / 0.58 / 0.45)
+# Called at treaty formation and after each revision vote resolution
+nte_assign_locked_tiers = {
+	remove_global_variable = gnl_rank1_country
+	remove_global_variable = gnl_rank2_country
+	remove_global_variable = gnl_rank3_country
+	remove_global_variable = gnl_rank4_country
+	remove_global_variable = gnl_rank5_country
+
+	every_country = {
+		limit = { has_variable = gnl_participating_country }
+		set_variable = {
+			name = nte_current_tonnage
+			value = nte_country_effective_tonnage
+		}
+		set_variable = {
+			name = nte_cached_tonnage
+			value = var:nte_current_tonnage
+			months = 2
+		}
+		remove_variable = nte_tier_assigned_temp
+	}
+
+	# Rank 1 (ratio 1.67 — Great Powers prioritized)
+	if = {
+		limit = {
+			any_country = {
+				has_variable = gnl_participating_country
+				country_rank >= rank_value:great_power
+			}
+		}
+		ordered_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				country_rank >= rank_value:great_power
+			}
+			order_by = var:nte_current_tonnage
+			position = 0
+			set_global_variable = { name = gnl_rank1_country value = this }
+			set_variable = { name = nte_locked_tier_rank value = 1 }
+			set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			set_variable = nte_tier_assigned_temp
+			if = {
+				limit = { NOT = { has_global_variable = gnl_tonnage_base_limit } }
+				set_global_variable = {
+					name = gnl_tonnage_base_limit
+					value = {
+						value = var:nte_current_tonnage
+						divide = 1.67
+						min = 120
+						max = 1200
+						round = yes
+					}
+				}
+			}
+		}
+	}
+	else = {
+		ordered_country = {
+			limit = { has_variable = gnl_participating_country }
+			order_by = var:nte_current_tonnage
+			position = 0
+			set_global_variable = { name = gnl_rank1_country value = this }
+			set_variable = { name = nte_locked_tier_rank value = 1 }
+			set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			set_variable = nte_tier_assigned_temp
+			if = {
+				limit = { NOT = { has_global_variable = gnl_tonnage_base_limit } }
+				set_global_variable = {
+					name = gnl_tonnage_base_limit
+					value = {
+						value = var:nte_current_tonnage
+						divide = 1.67
+						min = 120
+						max = 1200
+						round = yes
+					}
+				}
+			}
+		}
+	}
+
+	# Rank 2 (ratio 1.67 — Great Powers prioritized)
+	if = {
+		limit = {
+			any_country = {
+				has_variable = gnl_participating_country
+				NOT = { has_variable = nte_tier_assigned_temp }
+				country_rank >= rank_value:great_power
+			}
+		}
+		ordered_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { has_variable = nte_tier_assigned_temp }
+				country_rank >= rank_value:great_power
+			}
+			order_by = var:nte_current_tonnage
+			position = 0
+			set_global_variable = { name = gnl_rank2_country value = this }
+			set_variable = { name = nte_locked_tier_rank value = 2 }
+			set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			set_variable = nte_tier_assigned_temp
+		}
+	}
+	else = {
+		ordered_country = {
+			limit = {
+				has_variable = gnl_participating_country
+				NOT = { has_variable = nte_tier_assigned_temp }
+			}
+			order_by = var:nte_current_tonnage
+			position = 0
+			set_global_variable = { name = gnl_rank2_country value = this }
+			set_variable = { name = nte_locked_tier_rank value = 2 }
+			set_variable = { name = nte_locked_tier_ratio value = 1.67 }
+			set_variable = nte_tier_assigned_temp
+		}
+	}
+
+	# Rank 3 (ratio 1.00)
+	ordered_country = {
+		limit = {
+			has_variable = gnl_participating_country
+			NOT = { has_variable = nte_tier_assigned_temp }
+		}
+		order_by = var:nte_current_tonnage
+		position = 0
+		set_global_variable = { name = gnl_rank3_country value = this }
+		set_variable = { name = nte_locked_tier_rank value = 3 }
+		set_variable = { name = nte_locked_tier_ratio value = 1.00 }
+		set_variable = nte_tier_assigned_temp
+	}
+
+	# Rank 4 (ratio 0.58)
+	ordered_country = {
+		limit = {
+			has_variable = gnl_participating_country
+			NOT = { has_variable = nte_tier_assigned_temp }
+		}
+		order_by = var:nte_current_tonnage
+		position = 0
+		set_global_variable = { name = gnl_rank4_country value = this }
+		set_variable = { name = nte_locked_tier_rank value = 4 }
+		set_variable = { name = nte_locked_tier_ratio value = 0.58 }
+		set_variable = nte_tier_assigned_temp
+	}
+
+	# Rank 5 (ratio 0.58)
+	ordered_country = {
+		limit = {
+			has_variable = gnl_participating_country
+			NOT = { has_variable = nte_tier_assigned_temp }
+		}
+		order_by = var:nte_current_tonnage
+		position = 0
+		set_global_variable = { name = gnl_rank5_country value = this }
+		set_variable = { name = nte_locked_tier_rank value = 5 }
+		set_variable = { name = nte_locked_tier_ratio value = 0.58 }
+		set_variable = nte_tier_assigned_temp
+	}
+
+	# Rank 6+ (ratio 0.45)
+	every_country = {
+		limit = {
+			has_variable = gnl_participating_country
+			NOT = { has_variable = nte_tier_assigned_temp }
+		}
+		set_variable = { name = nte_locked_tier_rank value = 6 }
+		set_variable = { name = nte_locked_tier_ratio value = 0.45 }
+	}
+
+	every_country = {
+		limit = { has_variable = nte_tier_assigned_temp }
+		remove_variable = nte_tier_assigned_temp
+	}
+	every_country = {
+		limit = { has_variable = gnl_participating_country }
+		nte_update_country_tonnage_vars = yes
+	}
+}

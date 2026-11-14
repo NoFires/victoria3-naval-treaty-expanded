@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Review — Naval Treaty Expanded</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      min-width: 0;
+    }
+
+    nav {
+      width: 240px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e5e5ea;
+      padding: 2rem 1.25rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    nav h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      margin-bottom: 1rem;
+    }
+
+    nav a {
+      display: block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      color: #3a3a3c;
+      text-decoration: none;
+      font-size: 0.825rem;
+      margin-bottom: 0.2rem;
+      transition: background 0.15s;
+    }
+
+    nav a:hover { background: #f2f2f7; }
+
+    main {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 2.5rem 3rem;
+      max-width: 1600px;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e5e5ea;
+    }
+
+    header h1 { font-size: 1.75rem; font-weight: 700; }
+    header p { margin-top: 0.5rem; color: #6e6e73; font-size: 0.95rem; }
+    header .meta { margin-top: 0.75rem; font-size: 0.8rem; color: #8e8e93; }
+
+    section { margin-bottom: 3rem; scroll-margin-top: 2rem; }
+
+    section h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e5e5ea;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5ea;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .card p { color: #3a3a3c; font-size: 0.9rem; overflow-wrap: break-word; word-break: break-word; margin-bottom: 0.6rem; }
+    .card p:last-child { margin-bottom: 0; }
+
+    .diagram-card {
+      background: #fff;
+      border: 1px solid #e5e5ea;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      min-width: 0;
+    }
+
+    .diagram-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .diagram-desc { color: #6e6e73; font-size: 0.85rem; margin-bottom: 1rem; }
+    .mermaid {
+      min-height: 80px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .findings { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .finding {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      min-width: 0;
+    }
+
+    .finding.strength { background: #f0faf4; border-left: 3px solid #30d158; }
+    .finding.concern  { background: #fffbf0; border-left: 3px solid #ff9f0a; }
+    .finding.risk     { background: #fff5f5; border-left: 3px solid #ff3b30; }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .finding-text {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .badge-strength { background: #30d158; color: #fff; }
+    .badge-concern  { background: #ff9f0a; color: #fff; }
+    .badge-risk     { background: #ff3b30; color: #fff; }
+
+    .finding-text strong { display: block; margin-bottom: 0.2rem; overflow-wrap: break-word; word-break: break-word; }
+    .finding-text p { color: #3a3a3c; overflow-wrap: break-word; word-break: break-word; }
+    .finding-text * { overflow-wrap: break-word; word-break: break-word; }
+
+    .recommendations ol { padding-left: 1.5rem; }
+    .recommendations li { margin-bottom: 0.75rem; color: #3a3a3c; font-size: 0.9rem; overflow-wrap: break-word; word-break: break-word; }
+    .recommendations li strong { color: #1d1d1f; }
+
+    code {
+      background: #f2f2f7;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84em;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        flex-direction: column;
+      }
+
+      nav {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: 30vh;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid #e5e5ea;
+        overflow-x: auto;
+      }
+
+      nav a {
+        display: inline-block;
+        margin-bottom: 0;
+        margin-right: 0.25rem;
+      }
+
+      main {
+        padding: 1.5rem 1.25rem;
+        max-width: 100%;
+      }
+
+      .diagram-card { margin-left: -1.25rem; margin-right: -1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <h2>Architecture Review</h2>
+    <a href="#current">Current Architecture</a>
+    <a href="#separation-of-concerns">Separation of Concerns</a>
+    <a href="#cohesion-and-coupling">Cohesion and Coupling</a>
+    <a href="#layered-architecture">Layered Architecture</a>
+    <a href="#hexagonal-architecture-ports-and-adapters">Hexagonal Architecture / Ports and Adapters</a>
+    <a href="#scalability">Scalability</a>
+    <a href="#observability">Observability</a>
+    <a href="#security">Security</a>
+    <a href="#reliability">Reliability</a>
+    <a href="#resilience">Resilience</a>
+    <a href="#data-architecture">Data Architecture</a>
+    <a href="#cost-efficiency-finops">Cost Efficiency (FinOps)</a>
+    <a href="#operability">Operability</a>
+    <a href="#deployment-architecture">Deployment Architecture</a>
+    <a href="#event-architecture">Event Architecture</a>
+    <a href="#ai-architecture">AI Architecture</a>
+    <a href="#multi-tenancy">Multi-Tenancy</a>
+    <a href="#architecture-governance">Architecture Governance</a>
+    <a href="#domain-architecture">Domain Architecture</a>
+    <a href="#api-architecture">API Architecture</a>
+    <a href="#architecture-fitness-metrics">Architecture Fitness Metrics</a>
+    <a href="#common-anti-patterns">Common Anti-Patterns</a>
+    <a href="#testability">Testability</a>
+    <a href="#evolvability">Evolvability</a>
+    <a href="#architectural-smells-codebase-review-only-not-applicable-in-design-review">Architectural Smells</a>
+    <a href="#recommended">Recommended Architecture</a>
+  </nav>
+
+  <main>
+    <header>
+      <h1>Naval Treaty Expanded Architecture Review</h1>
+      <p>Comprehensive architectural assessment of the Victoria 3 1.15.* naval limitation treaty mod against Paradox engine contracts and software architecture principles.</p>
+      <p class="meta">Generated 2026-11-14 · Codebase Review · Target Baseline: Victoria 3 1.15.1</p>
+    </header>
+
+    <section id="current">
+      <h2>Current Architecture</h2>
+
+      <div class="card">
+        <p>CodeGraph not available — structural analysis based on file/grep heuristics and direct cross-verification against Victoria 3 1.15.1 vanilla game scripts.</p>
+        <p><strong>Naval Treaty Expanded</strong> (~3,500 LOC across 22 files) implements both a multilateral Global Naval Limitation Union (modeled on the Washington/London Naval Treaties with locked capital-ship tonnage tiers, treaty stability, quinquennial conferences, diplomatic isolation votes, and escalator clauses) and a coercive Bilateral Naval Limitation Treaty (with a 60% ratio cap, war enforcement, and 3-stage ultimatum crisis chains).</p>
+      </div>
+
+      <div class="diagram-card">
+        <h3>System Context</h3>
+        <p class="diagram-desc">External actors, the Victoria 3 1.15.* engine runtime, and optional third-party mod integrations surrounding Naval Treaty Expanded.</p>
+        <div class="mermaid">
+graph TB
+  Player(["Human Players\nSingle & Multiplayer"]) -->|"Negotiates treaties, clicks\nJournal buttons, resolves events"| V3Engine["Victoria 3 Engine\n1.15.1 Clausewitz Runtime"]
+  AI(["AI Country Agents\nMajor & Great Powers"]) -->|"Evaluates accept_score,\nwargoal & wanted_navy_size"| V3Engine
+  V3Engine -->|"Executes scripted hooks,\nmonthly pulses, GUI & loc"| NTE["Naval Treaty Expanded\nMod Package"]
+  ISNO["Iron & Steam:\nNaval Overhaul Mod"] -.->|"Optional hook:\nnaval_overhaul_on_ship_constructed"| NTE
+  NTE -.->|"Detects presence via\nje_naval_arms_race loc probe"| ISNO
+  KuromiAI["AI Overhaul Mods\n00_default / Kuromi AI"] -.->|"INJECT:ai_strategy_default\nLoad order via zz_ prefix"| NTE
+  NTE -->|"Persists global_var,\ncountry var & JE progress"| SaveFile[("Victoria 3 Save State\nMultiplayer Synchronized")]
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <h3>Component Diagram</h3>
+        <p class="diagram-desc">Internal module layout highlighting the monolithic nte_effects.txt hub, split stability ownership inside nte_journal.txt, and GUI type overwrite.</p>
+        <div class="mermaid">
+graph LR
+  subgraph sg-contracts["Treaty Contracts"]
+    GNLArticle["global_naval_limitation_treaty.txt\nMutual Article & AI Score"]
+    BILArticle["bilateral_naval_limitation_treaty.txt\nDirected Article & Wargoal"]
+  end
+
+  subgraph sg-domain["Domain & Scoring Hub"]
+    ShipValues["nte_ship_values.txt\nTonnage, Cap & Fiscal Score"]
+    Effects["nte_effects.txt - 1167 LOC\nGod Module: Cleanup, Tiers,\nGlobal Pulse & Bilateral"]
+    Modifiers["nte_modifiers.txt\n18 Static Modifiers"]
+  end
+
+  subgraph sg-scheduling["Pulses & Compatibility"]
+    OnActions["nte_actions.txt\nBilateral Monthly Only"]
+    CompatHook["zz_nte_overhaul_compat.txt\nConstruction Hook"]
+  end
+
+  subgraph sg-ui-events["Presentation, Actions & Events"]
+    Journal["nte_journal.txt\nGlobal JE + Global Pulse + Stability"]
+    Buttons["nte_scripted_buttons.txt\n10 Treaty Actions"]
+    BarsAlerts["nte_bars.txt & nte_alerts.txt\nProgress Bars & Top Alerts"]
+    GlobalEvents["nte_global_treaty_events.txt\nnte_global.1..10"]
+    BilateralEvents["nte_bilateral_treaty_events.txt\nnte_bilateral.1..20"]
+    FrontendGUI["zz_nte_frontend_dlc.gui\nFull dlc_types Overwrite"]
+  end
+
+  subgraph sg-ai["AI & Localization"]
+    AIStrat["zz_nte_ai_strategy.txt\nINJECT:ai_strategy_default"]
+    Loc["nte_l_english.yml &\nnte_l_simp_chinese.yml"]
+  end
+
+  GNLArticle -->|"on_entry / on_break"| Effects
+  GNLArticle -->|"live ship loop x3"| ShipValues
+  BILArticle -->|"on_start / on_break"| Effects
+  BILArticle -->|"possible check"| ShipValues
+  OnActions -->|"monthly bilateral"| Effects
+  CompatHook -->|"fires nte_global.10"| GlobalEvents
+  Journal -->|"on_monthly_pulse\nhosts global tick!"| Effects
+  Journal -->|"collapse outcome"| Effects
+  Buttons -->|"mutates root bar only"| Journal
+  Buttons -->|"triggers"| GlobalEvents
+  Effects -->|"applies"| Modifiers
+  Effects -->|"updates quota bar"| Journal
+  Effects -->|"triggers"| GlobalEvents
+  Effects -->|"triggers"| BilateralEvents
+  GlobalEvents -->|"mutates root or all bars"| Journal
+  GlobalEvents -->|"calls resolve votes"| Effects
+  BilateralEvents -->|"cleanup / penalties"| Modifiers
+  AIStrat -->|"reads nte flags"| Effects
+  BarsAlerts -->|"reads vars"| Effects
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <h3>Data &amp; State Ownership Architecture</h3>
+        <p class="diagram-desc">State domains across global variables, country scopes, and per-country Journal Entries, illustrating why stability bars currently diverge.</p>
+        <div class="mermaid">
+erDiagram
+  GLOBAL_TREATY_STATE {
+    boolean gnl_formed "Treaty active flag"
+    country_id global_gnl_chair_country "Single authoritative chair"
+    float gnl_tonnage_base_limit "Baseline cap 120 to 1200"
+    float gnl_stability_drift "Monthly or yearly drift -15 to 4"
+    int gnl_conference_months "5-year conference counter"
+    boolean gnl_voting_active "Revision vote in progress"
+    boolean gnl_isolation_voting "Isolation vote in progress"
+    boolean gnl_naval_holiday_active "Global construction freeze"
+    boolean nte_naval_overhaul_detected "Compat flag"
+  }
+
+  COUNTRY_SIGNATORY_STATE {
+    boolean gnl_participating_country "Membership marker"
+    float nte_locked_tier_ratio "1.67 or 1.00 or 0.58 or 0.45"
+    float nte_current_tonnage "Monthly cached tonnage"
+    float nte_legal_limit "Effective quota cap"
+    int nte_grace_months "0 to 5 months over cap"
+    boolean nte_mothball_active "Fleet mothball toggle"
+    boolean nte_falsifying_tonnage "Covert -12 pct reduction"
+  }
+
+  JOURNAL_ENTRY_LOCAL_STATE {
+    float nte_treaty_stability_bar "SPLIT OWNERSHIP per country JE!"
+    float nte_personal_quota_bar "0 to 120 pct display"
+  }
+
+  BILATERAL_RESTRICTION_STATE {
+    boolean nte_bilateral_restricted_flag "Single target lock"
+    country_id nte_bilateral_enforcer "Enforcer reference"
+    float nte_bilateral_max_tonnage "60 pct enforcer ratio"
+    int nte_bilateral_grace_months "0 to 4 breach counter"
+    boolean nte_bilateral_enforced_by_war "1-month expiry risk"
+  }
+
+  GLOBAL_TREATY_STATE ||--o{ COUNTRY_SIGNATORY_STATE : "constrains members"
+  COUNTRY_SIGNATORY_STATE ||--|| JOURNAL_ENTRY_LOCAL_STATE : "owns JE instance"
+  COUNTRY_SIGNATORY_STATE ||--o| BILATERAL_RESTRICTION_STATE : "may be restricted by"
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <h3>Sequence Diagram — Global Treaty Settlement &amp; Bilateral Ultimatum</h3>
+        <p class="diagram-desc">Two asynchronous monthly lifecycles: chair-driven multilateral settlement (showing split stability updates) and bilateral break/enforcement timing.</p>
+        <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant JE as "Journal Entry Pulse\n(Per Member Country)"
+  participant Chair as "Chair Country\n(global_gnl_chair_country)"
+  participant Engine as "nte_effects.txt\nMonthly Pulse"
+  participant Member as "Member Country JE\n(nte_treaty_stability_bar)"
+  participant Events as "Events & Buttons\n(nte_global.7 / buttons)"
+
+  Note over JE,Events: Flow A - Multilateral Monthly Pulse & Split Stability Bug
+  JE->>Chair: Check root == global_gnl_chair_country
+  Chair->>Engine: Execute nte_global_treaty_monthly_pulse
+  Engine->>Engine: Recompute tonnage, grace, super-heavy & drift
+  Engine->>Member: Update nte_personal_quota_bar per member
+  Events->>Member: nte_btn_naval_intelligence / .8.a / .10.b\nadds progress to ROOT JE only!
+  Member-->>Engine: Member A bar hits 0 while Member B > 0\n(Inconsistent collapse trigger)
+
+  Note over JE,Events: Flow B - Bilateral Enforcement & Break Race
+  participant Enforcer as "Enforcer\n(target_country)"
+  participant Target as "Restricted Party\n(source_country)"
+  participant Bilat as "bilateral_naval_limitation_treaty"
+  Bilat->>Enforcer: on_enforced sets nte_bilateral_enforced_by_war (1 mo)
+  Bilat->>Target: on_entry_into_force triggers nte_bilateral.20 (1 day)
+  Enforcer->>Enforcer: Delay > 30 days expires war-enforced flag!
+  Target->>Bilat: Breaks treaty (on_break runs + on_withdrawal)
+  Bilat->>Target: nte_bilateral_on_end_clean removes flags
+  Enforcer->>Target: nte_bilateral.2.a adds slowdown with no active treaty!
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <h3>Integration Diagram — Engine &amp; Third-Party Mod Coupling</h3>
+        <p class="diagram-desc">Extension points used across Victoria 3 vanilla definitions, Naval Overhaul, and AI mods, contrasting safe additive hooks with risky overwrites.</p>
+        <div class="mermaid">
+graph TB
+  subgraph sg-v3["Victoria 3 1.15.1 Extension Points"]
+    TreatyEngine["Treaty Article Engine\n00_alliance / 20_law_commitment patterns"]
+    OnActionEngine["On-Actions Registry\non_monthly_pulse_country"]
+    JournalEngine["Journal & Progress Bars\ncontext = country / none"]
+    AIStratEngine["AI Strategy Registry\nai_strategy_default"]
+    GUILayer["Frontend GUI Types\nfrontend_dlc.gui"]
+  end
+
+  subgraph sg-nte["Naval Treaty Expanded Adapters"]
+    NTE_Treaties["global & bilateral articles\nMissing once_per_treaty / swapped directed scopes"]
+    NTE_OnActions["nte_actions.txt\nBilateral only"]
+    NTE_JE["nte_journal.txt & NTE_journal_entry_groups.txt\nGroup loc mismatch & no illustration"]
+    NTE_AI["zz_nte_ai_strategy.txt\nSafe INJECT:ai_strategy_default"]
+    NTE_GUI["zz_nte_frontend_dlc.gui\nUNSAFE Full types dlc_types overwrite"]
+    NTE_Compat["zz_nte_overhaul_compat.txt\nReactive ship-built hook only"]
+  end
+
+  subgraph sg-mods["Companion Mods"]
+    Overhaul["Iron & Steam:\nNaval Overhaul"]
+    Kuromi["Kuromi AI / Vanilla AI"]
+  end
+
+  TreatyEngine --> NTE_Treaties
+  OnActionEngine --> NTE_OnActions
+  JournalEngine --> NTE_JE
+  AIStratEngine -->|"Additive INJECT"| NTE_AI
+  Kuromi -.->|"Compatible load order"| NTE_AI
+  GUILayer ==>|"Full overwrite conflict"| NTE_GUI
+  Overhaul -.->|"naval_overhaul_on_ship_constructed"| NTE_Compat
+  Overhaul -.->|"Localize je_naval_arms_race"| NTE_GUI
+        </div>
+      </div>
+    </section>
+
+    <section id="separation-of-concerns">
+      <h2>Separation of Concerns</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Journal Entry serves as UI, global scheduler, and lifecycle authority</strong>
+            <p><code>common/journal_entries/nte_journal.txt:175-251</code> couples player-facing UI presentation (map coloring, progress bars, buttons) with the global treaty monthly scheduler (<code>nte_global_treaty_monthly_pulse</code>) and treaty collapse triggers (<code>outcome</code>). Moving the global pulse to <code>on_monthly_pulse_country</code> or a <code>context = none</code> global Journal Entry decouples simulation ticks from individual country UI instances.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Presentation strings and domain thresholds drift apart</strong>
+            <p>Localization promises <code>-20%</code> naval upkeep (<code>nte_l_english.yml:78</code>) while <code>global_naval_limitation_union_bonus</code> grants <code>-10%</code> (<code>nte_modifiers.txt:6</code>); <code>nte_btn_submarine_protocol_desc</code> advertises <code>25</code> influence while <code>nte_scripted_buttons.txt:390</code> gates on <code>influence &gt;= 50</code>; <code>nte_bilateral.20.e_tt</code> promises <code>+15</code> relations missing from <code>events/nte_bilateral_treaty_events.txt:330-344</code>.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Tonnage and fiscal formulas are cleanly isolated in script_values</strong>
+            <p>All ship scoring, locked-tier caps, vote weights, and fiscal distress multipliers live in <code>common/script_values/nte_ship_values.txt:1-307</code> rather than being duplicated inline across treaty articles and events.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cohesion-and-coupling">
+      <h2>Cohesion and Coupling</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Monolithic 1,167-line nte_effects.txt combines four distinct domains</strong>
+            <p><code>common/scripted_effects/nte_effects.txt:1-1167</code> mixes modifier cleanup utilities, locked-tier assignment, global multilateral pulse/voting, and bilateral enforcement/monthly checks in one file, making targeted edits error-prone and obscuring dependencies.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Fragile UI coupling to external mod localization key</strong>
+            <p><code>gui/zz_nte_frontend_dlc.gui:23</code> detects <em>Iron &amp; Steam: Naval Overhaul</em> via <code>Not( EqualTo_string( Localize( 'je_naval_arms_race' ), 'je_naval_arms_race' ) )</code> while replacing all of <code>types dlc_types</code>, tightly coupling NTE's frontend GUI to both vanilla GUI internals and an external mod's localization key.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Duplicate comment numbering and mixed cleanup patterns</strong>
+            <p><code>nte_effects.txt:830,847</code> repeats section marker <code># 5.</code> and <code>nte_global_on_withdrawal</code> omits clearing transient threat markers cleanly until the following monthly pulse.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="layered-architecture">
+      <h2>Layered Architecture</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Presentation layer mutates authoritative treaty state directly</strong>
+            <p><code>common/scripted_buttons/nte_scripted_buttons.txt:299-301,395-397</code> and <code>events/nte_global_treaty_events.txt:524-526,640-642</code> add progress directly to <code>root</code>'s Journal Entry progress bar instead of routing through a centralized domain effect on a global stability variable.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Treaty articles delegate lifecycle logic to scripted effects</strong>
+            <p>Both <code>global_naval_limitation_treaty.txt</code> and <code>bilateral_naval_limitation_treaty.txt</code> keep lifecycle callbacks concise by delegating to named scripted effects rather than embedding hundreds of lines of imperative mutations inside treaty definitions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="hexagonal-architecture-ports-and-adapters">
+      <h2>Hexagonal Architecture / Ports and Adapters</h2>
+      <div class="findings">
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Adaptive threshold port for Iron &amp; Steam: Naval Overhaul</strong>
+            <p><code>common/on_actions/zz_nte_overhaul_compat.txt:1-29</code> and <code>nte_effects.txt:588-605</code> adapt qualitative super-heavy thresholds (<code>7500/750</code> vs <code>5500/550</code>) behind <code>global_var:nte_naval_overhaul_detected</code> without taking a hard dependency on external mod files.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Missing anti-corruption adapter for custom ship classes</strong>
+            <p><code>nte_single_ship_effective_tonnage</code> (<code>nte_ship_values.txt:5-116</code>) switches directly on vanilla ship type identifiers (<code>ship_type_dreadnought</code>, <code>ship_type_carrier</code>, etc.) and falls back to flat <code>20</code> / <code>6</code> base tonnage for any modded ship hull, leaving Naval Overhaul or custom ship mods under-scored on base hull value.</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Full vanilla GUI overwrite instead of additive adaptation</strong>
+            <p><code>gui/zz_nte_frontend_dlc.gui:1-69</code> replaces vanilla <code>frontend_dlc.gui</code> <code>dlc_types</code> wholesale instead of isolating compatibility metadata, creating immediate conflict risk with vanilla UI updates or other DLC-bar mods.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scalability">
+      <h2>Scalability</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Repeated live ship iteration inside AI acceptance and possible triggers</strong>
+            <p><code>nte_country_effective_tonnage</code> iterates <code>every_scope_ship</code> on every invocation. In <code>global_naval_limitation_treaty.txt:348,355,361</code>, it is evaluated three times per AI diplomatic acceptance check, and again inside <code>bilateral_naval_limitation_treaty.txt:24</code> <code>possible</code> predicates across all country pairs, degrading late-game tick performance when fleets scale.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Fixed 5-seat rank ladder limits scaling beyond five major naval powers</strong>
+            <p><code>nte_assign_locked_tiers</code> (<code>nte_effects.txt:55-229</code>) tracks explicit variables <code>gnl_rank1_country</code> through <code>gnl_rank5_country</code>, capping explicit UI display and tiered recognition at 5 ranked seats even in multipolar late-game coalitions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="observability">
+      <h2>Observability</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Vacant rank tooltip access generates continuous error.log spam</strong>
+            <p><code>global_naval_limitation_union_desc</code> (<code>nte_l_english.yml:5</code>, <code>nte_l_simp_chinese.yml:6</code>) directly dereferences <code>Scope.GetGlobalVariable('gnl_rank3_country').GetCountry.GetName</code> through <code>gnl_rank5_country</code> without existence checks, causing Paradox engine errors whenever fewer than 5 signatories exist.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Stability progress bar hides positive vs negative drift drivers</strong>
+            <p><code>common/scripted_progress_bars/nte_bars.txt:14-22</code> uses plain <code>if</code> logic inside <code>yearly_progress</code> instead of vanilla <code>progress_condition</code> blocks, hiding the per-factor Advance/Retreat tooltip breakdown from players.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Transparent multi-factor AI acceptance descriptions</strong>
+            <p>Both treaty articles expose detailed <code>desc</code> breakdowns (<code>NTE_ACCEPTANCE_*</code>) covering fiscal pressure, tonnage ratio, rivalry, alliance, and naval laws.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="security">
+      <h2>Security</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Gameplay economy exploit via flat +2,000 minting on hull scrapping</strong>
+            <p><code>nte_btn_scrap_obsolete_hulls</code> (<code>common/scripted_buttons/nte_scripted_buttons.txt:364-370</code>) awards a flat <code>country_minting_add = 2000</code> regardless of nation GDP or fleet size, enabling small or bankrupt nations to abuse scrapping cycles as an artificial treasury generator.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Hardcoded unrelated Steam ID and save-compatibility flag in virtual DLC</strong>
+            <p><code>dlc/dlc_nte_overhaul/dlc_nte_overhaul.dlc:3,8</code> sets <code>steam_id = 529340</code> (Victoria 3 Voice of the People / Paradox ID collision) and <code>affects_save_compatibility = yes</code>, creating unnecessary save-load friction when toggling compatibility patches.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reliability">
+      <h2>Reliability</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Swapped directed scopes in bilateral treaty visible/possible checks</strong>
+            <p>Per Victoria 3 <code>treaty_articles.md:408-433</code>, for <code>kind = directed</code> articles <code>root</code> is the prospective <code>source_country</code> (restricted party) and <code>scope:other_country</code> is the prospective <code>target_country</code> (enforcer). <code>bilateral_naval_limitation_treaty.txt:16-30</code> checks <code>country_rank &gt;= rank_value:major_power</code> on <code>root</code> and <code>nte_country_effective_tonnage &gt; 0</code> on <code>scope:other_country</code>, inverting enforcer and restricted-party prerequisites.</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Missing once_per_treaty, offer AI usage, and renegotiation guards</strong>
+            <p>Unlike vanilla mutual articles (<code>00_alliance.txt</code>, <code>01_defensive_pact.txt</code>), <code>global_naval_limitation_treaty.txt</code> omits <code>usage_limit = once_per_treaty</code>, <code>article_ai_usage = { offer }</code>, and <code>is_renegotiation</code> checks in <code>can_ratify</code> (same renegotiation gap in <code>bilateral_naval_limitation_treaty.txt</code>).</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Global treaty dissolution cascade on single-chair withdrawal</strong>
+            <p>Because <code>global_naval_limitation_treaty.txt:93</code> restricts new membership signing exclusively to <code>global_gnl_chair_country</code> and <code>on_break</code> fires alongside <code>on_withdrawal</code> (<code>treaty_articles.md:134</code>), a chair withdrawal or break immediately triggers treaty-wide dissolution or breaks hub-and-spoke bilateral links without a transition grace window.</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Bilateral war-enforced expiry race and post-break modifier leak</strong>
+            <p><code>nte_bilateral_enforced_by_war</code> expires in <code>months = 1</code> (<code>bilateral_naval_limitation_treaty.txt:89</code>) while <code>nte_bilateral.20</code> has <code>duration = 2</code> months, risking unwarranted +3 infamy/-50 influence penalties if confirmed after 30 days. Additionally, <code>nte_bilateral.2.a</code> applies <code>nte_bilateral_capital_slowdown</code> even after <code>nte_bilateral_on_break_handler</code> already cleaned up the treaty.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="resilience">
+      <h2>Resilience</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Reactive-only Naval Overhaul detection misses pre-built fleets</strong>
+            <p><code>zz_nte_overhaul_compat.txt:1-29</code> only sets <code>global_var:nte_naval_overhaul_detected</code> inside <code>naval_overhaul_on_ship_constructed</code>; if no ship finishes construction after game start or mid-save load, Naval Overhaul detection remains unset and super-heavy checks apply the lower vanilla <code>5500/550</code> threshold.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Super-heavy breach triggers indefinite penalty loop on opt-in</strong>
+            <p><code>nte_global_treaty_events.txt:497-557</code> (<code>nte_global.8</code>) gives non-chair members no clean compliance exit when retaining a super-heavy hull; monthly checks keep re-evaluating breach/escalation without clear remediation tracking.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Recovery fallback prevents orphaned treaties if chair vanishes</strong>
+            <p><code>nte_journal.txt:189-221</code> checks whether <code>global_gnl_chair_country</code> still exists and participates, promoting a successor or dissolving gracefully—though this belongs in <code>on_actions</code> rather than per-country JE pulses.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="data-architecture">
+      <h2>Data Architecture</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>No single source of truth (SSOT) for global treaty stability</strong>
+            <p>Treaty stability lives independently inside each member country's <code>nte_treaty_stability_bar</code> on <code>je:global_naval_limitation_union</code>. Multiple buttons (<code>nte_scripted_buttons.txt:299,395</code>) and events (<code>nte_global.8.a</code>, <code>nte_global.10.b</code>) mutate only <code>root</code>'s bar, causing per-country divergence and premature single-member collapse.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Global Journal Entry group key naming mismatch</strong>
+            <p><code>common/journal_entry_groups/NTE_journal_entry_groups.txt:1</code> defines <code>global_naval_limitation_union_group</code> without an <code>illustration</code> or matching <code>je_group_global_naval_limitation_union_group</code> localization key (currently localized under bare <code>global_naval_limitation_union_group</code>).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cost-efficiency-finops">
+      <h2>Cost Efficiency (FinOps)</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Simulation CPU cost from uncached ship-loop evaluations</strong>
+            <p>Cloud FinOps does not apply to a local Paradox mod, but engine CPU budget is impacted by repeated live <code>every_scope_ship</code> traversals in AI scoring (<code>global_naval_limitation_treaty.txt:348-361</code>) instead of reading a monthly cached <code>nte_cached_tonnage</code> variable.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="operability">
+      <h2>Operability</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>No automated build or verification scripts in repository</strong>
+            <p><code>AGENTS.md</code> mandates UTF-8 BOM preservation, balanced braces <code>{}</code>, valid JSON metadata, and 100% EN/ZH key parity, but no repository script automates these checks prior to workshop packaging.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Metadata missing explicit mod id</strong>
+            <p><code>.metadata/metadata.json</code> omits an explicit <code>"id": "naval_treaty_expanded"</code> field, relying solely on display name and workshop packaging metadata.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="deployment-architecture">
+      <h2>Deployment Architecture</h2>
+      <div class="findings">
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Clean mod folder separation and ignore hygiene</strong>
+            <p><code>.gitignore</code> excludes <code>.dsh/</code>, editor folders, and logs, and <code>AGENTS.md</code> documents exact Workshop upload boundaries (<code>.metadata</code>, <code>common</code>, <code>dlc</code>, <code>events</code>, <code>gui</code>, <code>localization</code>, <code>thumbnail.png</code>).</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Virtual DLC save-compatibility flag complicates mid-campaign toggling</strong>
+            <p><code>dlc/dlc_nte_overhaul/dlc_nte_overhaul.dlc:8</code> marks <code>affects_save_compatibility = yes</code> even though it functions strictly as a compatibility indicator badge.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="event-architecture">
+      <h2>Event Architecture</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Quinquennial conference fan-out lacks two-stage aggregation</strong>
+            <p><code>nte_global.7</code> (<code>events/nte_global_treaty_events.txt:410-495</code>) is dispatched simultaneously to every member; choosing option <code>b</code> immediately applies <code>-2</code> stability per respondent (and mutates <code>gnl_tonnage_base_limit</code> globally if Chair vs <code>+20%</code> Escalator if non-Chair), creating N-fold stability spikes and asymmetric behavior.</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Vote countdown race and unbounded isolation sanction spam</strong>
+            <p><code>nte_effects.txt:741-775</code> decrements <code>gnl_voting_months_left</code> and <code>gnl_isolation_months_left</code> inside the same monthly tick as proposal creation, shortening effective voting time and lacking an isolation cooldown or ally exclusion (<code>nte_scripted_buttons.txt:77-152</code>).</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>on_break fires in addition to on_withdrawal in Paradox engine</strong>
+            <p>Per <code>treaty_articles.md:134</code>, <code>on_break</code> executes in addition to <code>on_withdrawal</code>. <code>global_naval_limitation_treaty.txt</code> routes both to <code>nte_global_on_withdrawal</code>, executing cleanup/dissolution logic twice on treaty break unless separated cleanly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ai-architecture">
+      <h2>AI Architecture</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>LLM AI criteria N/A; scripted diplomatic AI has quota-prediction mismatch</strong>
+            <p>The codebase contains no LLM/ML pipelines. For Victoria 3's scripted AI, <code>global_naval_limitation_treaty.txt:346-352</code> assumes Great Powers receive a <code>1.67x</code> baseline cap in <code>inherent_accept_score</code> even when Ranks 1–2 are already locked, causing latecomer Great Powers to miscalculate their post-ratification quota and breach immediately upon joining.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Bilateral restriction and AI strategy gap</strong>
+            <p><code>common/ai_strategies/zz_nte_ai_strategy.txt:1-49</code> adjusts <code>wanted_navy_size</code> for multilateral flags (<code>nte_over_limit_flag</code>, <code>nte_near_limit_flag</code>, <code>nte_sanctioned_flag</code>) but ignores <code>nte_bilateral_restricted_flag</code> and <code>nte_bilateral_near_limit_flag</code>, and isolation vote AI base score lacks zero-baseline gating against allies.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Non-destructive AI strategy injection and fiscal pressure model</strong>
+            <p><code>zz_nte_ai_strategy.txt</code> uses <code>INJECT:ai_strategy_default</code> cleanly and <code>nte_naval_fiscal_pressure_index</code> combines naval budget share, deficits, and <code>scaled_gold_reserves</code> realistically.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="multi-tenancy">
+      <h2>Multi-Tenancy</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>GetPlayer localization dependency leaks single-player bias in multiplayer/observer</strong>
+            <p><code>global_naval_limitation_union_desc</code> (<code>nte_l_english.yml:5</code>, <code>nte_l_simp_chinese.yml:6</code>) uses <code>GetPlayer</code> instead of <code>JournalEntry.GetCountry</code> / <code>ROOT.GetCountry</code>, displaying the local client player's tier/tonnage or failing in observer mode.</p>
+          </div>
+        </div>
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Deterministic single-chair global settlement for multiplayer sync</strong>
+            <p>Executing global treaty resolution strictly on <code>global_var:global_gnl_chair_country</code> prevents non-deterministic multi-client ordering divergence (<code>multiplayer_synchronized: true</code>).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture-governance">
+      <h2>Architecture Governance</h2>
+      <div class="findings">
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Explicit engineering constraints documented in AGENTS.md</strong>
+            <p><code>AGENTS.md</code> establishes clear rules for vanilla reverse-engineering before scripting, prefix isolation (<code>nte_</code>/<code>gnl_</code>), zero <code>error.log</code> tolerance, multiplayer determinism, and EN/ZH localization parity.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Implementation has drifted from AGENTS.md invariants in GUI and error.log guards</strong>
+            <p><code>gui/zz_nte_frontend_dlc.gui</code> overrides a full vanilla GUI type block despite incremental-injection guidance, and unguarded <code>gnl_rank3..5_country</code> loc references plus <code>GetPlayer</code> violate zero-<code>error.log</code> / multiplayer hygiene.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="domain-architecture">
+      <h2>Domain Architecture</h2>
+      <div class="findings">
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Clear bounded separation between Multilateral Union and Bilateral Coercion</strong>
+            <p>The domain cleanly distinguishes cooperative multilateral arms control (<code>global_naval_limitation_treaty</code>, <code>gnl_*</code>) from asymmetric post-war bilateral limitation (<code>bilateral_naval_limitation_treaty</code>, <code>nte_bilateral_*</code>).</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Bilateral formal break and ongoing monthly breach share a single resolution event</strong>
+            <p><code>nte_bilateral.2.a</code> conflates monthly over-limit compliance warnings (where the treaty remains active) with formal <code>on_break</code> events (where <code>nte_bilateral_on_end_clean</code> already terminated the treaty).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="api-architecture">
+      <h2>API Architecture</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>Engine contract mismatches on treaty callbacks and directed scopes</strong>
+            <p>Violations of Victoria 3 1.15.1 treaty article contracts—specifically <code>on_break</code> additive execution over <code>on_withdrawal</code>, <code>kind = directed</code> <code>root</code> vs <code>scope:other_country</code> semantics, and missing <code>once_per_treaty</code> / <code>is_renegotiation</code> checks—create subtle runtime bugs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture-fitness-metrics">
+      <h2>Architecture Fitness Metrics</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>No automated architectural fitness checks</strong>
+            <p>Checks for UTF-8 BOM, balanced braces <code>{}</code>, localization key parity (<code>ZH_ONLY=0</code>, <code>EN_ONLY=0</code>), and cross-file modifier/variable reference integrity are all manual rather than automated.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="common-anti-patterns">
+      <h2>Common Anti-Patterns</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Big Ball of Mud / God Module in nte_effects.txt</strong>
+            <p>At 1,167 lines spanning 4 unrelated responsibilities, <code>common/scripted_effects/nte_effects.txt</code> exhibits classic God Module traits, increasing merge conflict and regression risk.</p>
+          </div>
+        </div>
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>Shared Mutable UI State Acting as Source of Truth</strong>
+            <p>Each signatory's <code>nte_treaty_stability_bar</code> acts as an uncoordinated mutable store updated inconsistently by buttons and events rather than deriving from <code>global_var:gnl_treaty_stability</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="testability">
+      <h2>Testability</h2>
+      <div class="findings">
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>No standalone validation or deterministic smoke harness</strong>
+            <p>Static correctness (BOM, brace balance, JSON validity, loc key parity) and script-level invariants are not exercised by an automated test script; testing currently relies entirely on launching Victoria 3 and inspecting <code>error.log</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="evolvability">
+      <h2>Evolvability</h2>
+      <div class="findings">
+        <div class="finding strength">
+          <span class="badge badge-strength">Strength</span>
+          <div class="finding-text">
+            <strong>Clean namespace discipline eases extension and conflict isolation</strong>
+            <p>Strict <code>nte_*</code> / <code>gnl_*</code> prefixing and modular alert/modifier/button files make adding new treaty protocols straightforward once <code>nte_effects.txt</code> is split.</p>
+          </div>
+        </div>
+        <div class="finding concern">
+          <span class="badge badge-concern">Concern</span>
+          <div class="finding-text">
+            <strong>GUI full-type overwrite blocks safe vanilla patch upgrades</strong>
+            <p>Replacing all of <code>dlc_types</code> in <code>gui/zz_nte_frontend_dlc.gui</code> forces manual diffing on every Victoria 3 UI patch.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architectural-smells-codebase-review-only-not-applicable-in-design-review">
+      <h2>Architectural Smells</h2>
+      <div class="findings">
+        <div class="finding risk">
+          <span class="badge badge-risk">Risk</span>
+          <div class="finding-text">
+            <strong>God Service (nte_effects.txt) and Smart UI (nte_journal.txt)</strong>
+            <p><code>nte_journal.txt</code> hosts the global monthly scheduler inside a UI Journal Entry, while <code>nte_effects.txt</code> centralizes four unrelated domains in a single 1,167-line file. Combined with direct UI progress-bar mutations in buttons/events, domain invariants are difficult to reason about in isolation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="recommended">
+      <h2>Recommended Architecture</h2>
+
+      <div class="diagram-card">
+        <h3>Recommended Component Diagram</h3>
+        <p class="diagram-desc">Splits nte_effects.txt into four cohesive domain files, introduces global_var:gnl_treaty_stability SSOT, moves global pulse to on_actions, and adds custom localization + cached tonnage.</p>
+        <div class="mermaid">
+graph LR
+  subgraph sg-contracts-new["Treaty Contracts (Engine-Compliant)"]
+    GNL2["global_naval_limitation_treaty.txt\nonce_per_treaty, offer, is_renegotiation\nseparate on_break vs on_withdrawal"]
+    BIL2["bilateral_naval_limitation_treaty.txt\nFixed root/other_country scopes\n4-month war grace & break split"]
+  end
+
+  subgraph sg-effects-new["Modular Scripted Effects (4 Files)"]
+    CleanFX["nte_cleanup_effects.txt\nGlobal & bilateral resets"]
+    TierFX["nte_tonnage_tier_effects.txt\nTonnage cache & prospective tier"]
+    GlobalFX["nte_global_pulse_effects.txt\nSSOT stability sync, votes & conference"]
+    BilatFX["nte_bilateral_effects.txt\nBilateral start, monthly & break"]
+  end
+
+  subgraph sg-pulse-new["Authoritative Scheduling"]
+    OnActions2["nte_actions.txt\non_game_started + on_monthly_pulse_country\nGlobal chair pulse + chair fallback + bilateral"]
+    Compat2["zz_nte_overhaul_compat.txt\nStartup + monthly + construction compat"]
+  end
+
+  subgraph sg-ssot["SSOT & Presentation"]
+    SSOT[("global_var:gnl_treaty_stability\nAuthoritative 0..100")]
+    CustomLoc["nte_custom_loc.txt\nSafe nte_rank1..5_line"]
+    Journal2["nte_journal.txt & nte_bars.txt\nPure UI + progress_condition + JE.GetCountry"]
+    ShipVal2["nte_ship_values.txt\nReads nte_cached_tonnage O1"]
+  end
+
+  GNL2 --> CleanFX
+  GNL2 --> TierFX
+  GNL2 --> GlobalFX
+  BIL2 --> BilatFX
+  OnActions2 -->|"Chair global pulse"| GlobalFX
+  OnActions2 -->|"Bilateral check"| BilatFX
+  Compat2 --> GlobalFX
+  GlobalFX -->|"Writes & syncs all JE bars"| SSOT
+  SSOT -->|"Reads into UI"| Journal2
+  TierFX -->|"Writes cache"| ShipVal2
+  CustomLoc -->|"Zero error.log"| Journal2
+        </div>
+      </div>
+
+      <div class="diagram-card">
+        <h3>Recommended Sequence — SSOT Stability &amp; Two-Stage Quinquennial Conference</h3>
+        <p class="diagram-desc">All buttons, events, and monthly ticks mutate global_var:gnl_treaty_stability via one sync helper, and quinquennial conferences aggregate member votes before applying a single global adjustment.</p>
+        <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant OnAct as "on_monthly_pulse_country\n(Chair Country)"
+  participant GlobalFX as "nte_global_pulse_effects.txt"
+  participant SSOT as "global_var:gnl_treaty_stability"
+  participant Members as "All Signatories\n(nte_treaty_stability_bar)"
+  participant Conf as "nte_global.7 Conference\n(2-Stage Aggregation)"
+
+  OnAct->>GlobalFX: Run monthly global settlement (deterministic)
+  GlobalFX->>SSOT: Apply monthly drift (-15..+4) clamped 0..100
+  GlobalFX->>Members: Sync every member's JE bar = SSOT
+  Note over GlobalFX,Conf: Every 60 months - 2-Stage Quinquennial Conference
+  GlobalFX->>Conf: Dispatch nte_global.7 to members (collect stance flags)
+  Conf-->>GlobalFX: Tally nte_conf_expand vs nte_conf_maintain next pulse
+  GlobalFX->>SSOT: Apply single net stability delta & update baseline once
+  GlobalFX->>Members: Sync all JE bars to SSOT (uniform collapse if <= 0)
+        </div>
+      </div>
+
+      <div class="card recommendations">
+        <ol>
+          <li><strong>Unify Treaty Stability under a Global SSOT (P0)</strong> — Introduce <code>global_var:gnl_treaty_stability</code> (start 75, clamped 0..100) with lazy migration for existing saves and one <code>nte_sync_global_stability_bars</code> helper called by every button, event, and monthly pulse so signatories can never desync.</li>
+          <li><strong>Fix Victoria 3 1.15.1 Treaty Engine Contracts (P0)</strong> — Add <code>usage_limit = once_per_treaty</code>, <code>article_ai_usage = { offer }</code>, and <code>is_renegotiation</code> checks; separate <code>on_break</code> penalty handling from <code>on_withdrawal</code>; allow joining via any active member and add chair-transition grace so chair exit does not shatter the union.</li>
+          <li><strong>Correct Bilateral Scopes, War Grace &amp; Break State (P0)</strong> — Fix swapped <code>root</code> vs <code>scope:other_country</code> conditions in <code>bilateral_naval_limitation_treaty.txt</code>, extend <code>nte_bilateral_enforced_by_war</code> to <code>months = 4</code>, and distinguish formal treaty break from active monthly breach in <code>nte_bilateral.2.a</code>.</li>
+          <li><strong>Eliminate Vote Races, Conference Fan-Out &amp; Exploits (P1)</strong> — Aggregate quinquennial conference (<code>nte_global.7</code>) stances in two stages, fix off-by-one vote timers with a 24-month isolation cooldown and ally exclusion, align submarine protocol to <code>influence &gt;= 25</code>, replace flat +2,000 scrapping minting with proportional upkeep/naval base trade-offs, and evaluate latecomer Great Power acceptance via <code>nte_prospective_tier_ratio</code>.</li>
+          <li><strong>Eliminate error.log Spam &amp; Align Localization (P2)</strong> — Add <code>common/custom_localization/nte_custom_loc.txt</code> to guard <code>gnl_rank1..5_country</code> safely, replace <code>GetPlayer</code> with <code>JournalEntry.GetCountry</code> / <code>ROOT.GetCountry</code>, add <code>progress_condition</code> blocks to <code>nte_treaty_stability_bar</code>, and align EN/ZH descriptions (<code>-10%</code> naval upkeep, <code>+15</code> bilateral relations, <code>je_group_*</code> key + illustration).</li>
+          <li><strong>Modularize Effects &amp; Optimize Performance (P3)</strong> — Split <code>nte_effects.txt</code> into four cohesive files (cleanup, tonnage/tiers, global pulse, bilateral), cache monthly <code>nte_cached_tonnage</code> for O(1) AI acceptance reads, extend <code>zz_nte_ai_strategy.txt</code> to bilateral flags, and normalize <code>dlc_nte_overhaul</code> and <code>metadata.json</code>.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Migration Notes</h3>
+        <p><strong>Save-Game Compatibility:</strong> Preserve all existing scripted effect names and modifier/variable keys so ongoing Victoria 3 campaigns load seamlessly. Lazy-initialize <code>global_var:gnl_treaty_stability</code> on the next monthly tick if <code>gnl_formed</code> is already set on an older save.</p>
+        <p><strong>Rollout Order:</strong> Fix P0 engine contract bugs and stability SSOT first, followed by P1 conference/voting/economy balance, P2 custom localization &amp; UI/loc alignment, and finally P3 file modularization + full UTF-8 BOM, brace balance, and EN/ZH parity verification.</p>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

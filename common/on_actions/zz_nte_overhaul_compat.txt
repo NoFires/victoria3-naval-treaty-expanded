@@ -7,6 +7,18 @@ naval_overhaul_on_ship_constructed = {
 	}
 }
 
+on_game_started = {
+	on_actions = {
+		nte_overhaul_startup_scan
+	}
+}
+
+on_monthly_pulse_country = {
+	on_actions = {
+		nte_overhaul_monthly_scan
+	}
+}
+
 nte_overhaul_compat_pulse = {
 	effect = {
 		if = {
@@ -19,11 +31,93 @@ nte_overhaul_compat_pulse = {
 				has_variable = gnl_participating_country
 				exists = global_var:global_gnl_chair_country
 				NOT = { has_global_variable = nte_overhaul_flavor_fired }
+				OR = {
+					has_technology_researched = dreadnought_tech
+					AND = {
+						exists = scope:ship
+						scope:ship = {
+							ship_group = ship_group:ship_group_capital_ships
+							OR = {
+								hit_points >= 6200
+								power_projection >= 550
+							}
+						}
+					}
+				}
 			}
 			set_global_variable = nte_overhaul_flavor_fired
 			global_var:global_gnl_chair_country = {
 				trigger_event = { id = nte_global.10 days = 3 }
 			}
+		}
+	}
+}
+
+nte_overhaul_startup_scan = {
+	effect = {
+		if = {
+			limit = {
+				NOT = { has_global_variable = nte_naval_overhaul_detected }
+				OR = {
+					has_global_variable = naval_overhaul_active
+					any_country = {
+						any_scope_ship = {
+							ship_group = ship_group:ship_group_capital_ships
+							OR = {
+								hit_points >= 7000
+								power_projection >= 630
+							}
+						}
+					}
+				}
+			}
+			set_global_variable = nte_naval_overhaul_detected
+		}
+	}
+}
+
+nte_overhaul_monthly_scan = {
+	effect = {
+		if = {
+			limit = {
+				NOT = { has_global_variable = nte_naval_overhaul_detected }
+				OR = {
+					has_global_variable = naval_overhaul_active
+					any_scope_ship = {
+						ship_group = ship_group:ship_group_capital_ships
+						OR = {
+							hit_points >= 7000
+							power_projection >= 630
+						}
+					}
+				}
+			}
+			set_global_variable = nte_naval_overhaul_detected
+		}
+		if = {
+			limit = {
+				has_global_variable = nte_naval_overhaul_detected
+				has_global_variable = gnl_formed
+				has_variable = gnl_participating_country
+				exists = global_var:global_gnl_chair_country
+				this = global_var:global_gnl_chair_country
+				NOT = { has_global_variable = nte_overhaul_flavor_fired }
+				any_country = {
+					is_country_alive = yes
+					OR = {
+						has_technology_researched = dreadnought_tech
+						any_scope_ship = {
+							ship_group = ship_group:ship_group_capital_ships
+							OR = {
+								hit_points >= 6200
+								power_projection >= 550
+							}
+						}
+					}
+				}
+			}
+			set_global_variable = nte_overhaul_flavor_fired
+			trigger_event = { id = nte_global.10 days = 3 }
 		}
 	}
 }

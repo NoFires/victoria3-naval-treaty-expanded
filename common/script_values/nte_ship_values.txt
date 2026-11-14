@@ -1,33 +1,41 @@
 ﻿# Naval Treaty Expanded - 1.15 Real Tonnage (Ship Era + Hit Points Complexity) & Voting Weights
 
 # Single ship tonnage value evaluated in `ship` scope
-# Capital ships count full tonnage (12-55 base + up to +45 mods); Cruisers are scaled ~35% (3-22 base + up to +14 mods); Destroyers/Submarines count 0
+# Capital ships count full tonnage (10-55 base + up to +45 mods); Combat Cruisers are scaled ~35% (3-22 base + up to +14 mods); Troop Transports, Destroyers/Submarines & Supply Ships count 0
 nte_single_ship_effective_tonnage = {
 	value = 0
 	if = {
 		limit = { ship_group = ship_group:ship_group_capital_ships }
 		if = {
-			limit = { is_ship_type = ship_type_ship_of_the_line }
+			limit = { is_ship_type = ship_type:ship_type_monitor }
+			add = 10
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type:ship_type_ship_of_the_line }
 			add = 12
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_early_ironclad }
+			limit = { is_ship_type = ship_type:ship_type_coastal_defense_ship }
+			add = 14
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type:ship_type_early_ironclad }
 			add = 18
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_modern_ironclad }
+			limit = { is_ship_type = ship_type:ship_type_modern_ironclad }
 			add = 24
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_pre_dreadnought }
+			limit = { is_ship_type = ship_type:ship_type_pre_dreadnought }
 			add = 30
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_dreadnought }
+			limit = { is_ship_type = ship_type:ship_type_dreadnought }
 			add = 40
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_super_dreadnought }
+			limit = { is_ship_type = ship_type:ship_type_super_dreadnought }
 			add = 55
 		}
 		else = {
@@ -57,29 +65,39 @@ nte_single_ship_effective_tonnage = {
 		}
 	}
 	else_if = {
-		limit = { ship_group = ship_group:ship_group_cruisers }
+		limit = {
+			ship_group = ship_group:ship_group_cruisers
+			NOR = {
+				is_ship_type = ship_type:ship_type_early_troop_ship
+				is_ship_type = ship_type:ship_type_troop_ship
+			}
+		}
 		if = {
-			limit = { is_ship_type = ship_type_frigate }
+			limit = { is_ship_type = ship_type:ship_type_frigate }
 			add = 3
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_protected_cruiser }
+			limit = { is_ship_type = ship_type:ship_type_iron_frigate }
 			add = 5
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_armored_cruiser }
+			limit = { is_ship_type = ship_type:ship_type_protected_cruiser }
+			add = 6
+		}
+		else_if = {
+			limit = { is_ship_type = ship_type:ship_type_armored_cruiser }
 			add = 8
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_light_cruiser }
+			limit = { is_ship_type = ship_type:ship_type_light_cruiser }
 			add = 9
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_seaplane_tender }
+			limit = { is_ship_type = ship_type:ship_type_seaplane_tender }
 			add = 13
 		}
 		else_if = {
-			limit = { is_ship_type = ship_type_aircraft_carrier }
+			limit = { is_ship_type = ship_type:ship_type_aircraft_carrier }
 			add = 22
 		}
 		else = {
@@ -168,7 +186,84 @@ nte_country_vote_weight = {
 	round = yes
 }
 
+# Cached O(1) effective tonnage lookup for AI acceptance, treaty triggers, and non-member scans
+nte_country_cached_effective_tonnage = {
+	value = 0
+	if = {
+		limit = { has_variable = nte_cached_tonnage }
+		value = var:nte_cached_tonnage
+	}
+	else_if = {
+		limit = { has_variable = nte_current_tonnage }
+		value = var:nte_current_tonnage
+	}
+	else = {
+		value = nte_country_effective_tonnage
+	}
+}
+
+# Effective sea power metric for treaty acceptance (combines combat displacement + screen/flotilla hull presence)
+nte_diplomatic_naval_strength = {
+	value = nte_country_cached_effective_tonnage
+	add = {
+		value = navy_size
+		multiply = 3
+	}
+	min = 1
+}
+
 # Country legal tonnage cap under Global Naval Limitation Treaty
+nte_prospective_tier_ratio = {
+	value = 1.00
+	if = {
+		limit = { has_variable = nte_locked_tier_ratio }
+		value = var:nte_locked_tier_ratio
+	}
+	else_if = {
+		limit = {
+			OR = {
+				NOT = { has_global_variable = gnl_formed }
+				NOT = { has_global_variable = gnl_tiers_initialized }
+			}
+		}
+		if = {
+			limit = { country_rank >= rank_value:great_power }
+			value = 1.67
+		}
+		else = {
+			value = 1.00
+		}
+	}
+	else = {
+		if = {
+			limit = {
+				country_rank >= rank_value:great_power
+				OR = {
+					NOT = { exists = global_var:gnl_rank1_country }
+					NOT = { exists = global_var:gnl_rank2_country }
+				}
+			}
+			value = 1.67
+		}
+		else_if = {
+			limit = { NOT = { exists = global_var:gnl_rank3_country } }
+			value = 1.00
+		}
+		else_if = {
+			limit = {
+				OR = {
+					NOT = { exists = global_var:gnl_rank4_country }
+					NOT = { exists = global_var:gnl_rank5_country }
+				}
+			}
+			value = 0.58
+		}
+		else = {
+			value = 0.45
+		}
+	}
+}
+
 nte_global_legal_limit = {
 	value = 100
 	if = {

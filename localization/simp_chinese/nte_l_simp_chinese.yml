@@ -1,9 +1,21 @@
 ﻿l_simp_chinese:
  # Journal Group & Core Journal Entry
+ global_naval_limitation_union_group: "全球海军限武条约"
  je_group_global_naval_limitation: "全球海军限武条约"
  global_naval_limitation_union: "全球海军限武条约大会"
  global_naval_limitation_union_reason: "#lore “海洋属于全人类，而非任何单一舰队的阴影。若无节制的钢铁与巨炮竞逐继续下去，等待列强的唯有财政枯竭与深海坟墓。”#!\n\n本日志是全球海军限武条约的常设外交中枢，实时核算各缔约国基于#v 舰船时代与复杂度（生命值溢价）#!的真实有效吨位（主力舰计 #v 100%#!，巡洋舰计 #v 35%#!）。"
- global_naval_limitation_union_desc: "#title 条约主席国与基准配额#!\n主席国：[GetGlobalVariable('global_gnl_chair_country').GetCountry.GetName]　|　当前基准吨位：#v [GetGlobalVariable('gnl_tonnage_base_limit').GetValue|0]#! 吨\n\n#title 本国海军战备仪表盘#!\n锁定档位：第 #v [GetPlayer.MakeScope.Var('nte_locked_tier_rank').GetValue|0]#! 档（比例系数 #v [GetPlayer.MakeScope.Var('nte_locked_tier_ratio').GetValue|2]#!）\n当前有效吨位：#v [GetPlayer.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / 合法上限 #v [GetPlayer.MakeScope.Var('nte_current_legal_limit').GetValue|0]#! 吨（占用率 #v [GetPlayer.MakeScope.Var('nte_quota_usage_pct').GetValue|0]%#!）\n剩余可用配额：#v [GetPlayer.MakeScope.Var('nte_tonnage_remaining').GetValue|0]#! 吨（负值表示已超标，超过 4 个月宽限期将触发[concept_infamy]衰减降低、国际贸易削减与船舰建造减速制裁）\n\n#title 世界海权天梯（签约/修订锁定席位）#!\n第 1 席（5.0）：[GetGlobalVariable('gnl_rank1_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank1_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank1_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!\n第 2 席（5.0）：[GetGlobalVariable('gnl_rank2_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank2_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank2_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!\n第 3 席（3.0）：[GetGlobalVariable('gnl_rank3_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank3_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank3_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!\n第 4 席（1.75）：[GetGlobalVariable('gnl_rank4_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank4_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank4_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!\n第 5 席（1.75）：[GetGlobalVariable('gnl_rank5_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank5_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank5_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ global_naval_limitation_union_desc: "#title 条约主席国与基准配额#!\n主席国：[GetGlobalVariable('global_gnl_chair_country').GetCountry.GetName]　|　当前基准吨位：#v [GetGlobalVariable('gnl_tonnage_base_limit').GetValue|0]#! 吨\n\n#title 本国海军战备仪表盘#!\n锁定档位：第 #v [JournalEntry.GetCountry.MakeScope.Var('nte_locked_tier_rank').GetValue|0]#! 档（比例系数 #v [JournalEntry.GetCountry.MakeScope.Var('nte_locked_tier_ratio').GetValue|2]#!）\n当前有效吨位：#v [JournalEntry.GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / 合法上限 #v [JournalEntry.GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#! 吨（占用率 #v [JournalEntry.GetCountry.MakeScope.Var('nte_quota_usage_pct').GetValue|0]%#!）\n剩余可用配额：#v [JournalEntry.GetCountry.MakeScope.Var('nte_tonnage_remaining').GetValue|0]#! 吨（负值表示已超标，超过 4 个月宽限期将触发[concept_infamy]衰减降低、国际贸易削减与船舰建造减速制裁）\n\n#title 世界海权天梯（签约/修订锁定席位）#!\n[JournalEntry.GetCountry.GetCustom('nte_rank1_line')]\n[JournalEntry.GetCountry.GetCustom('nte_rank2_line')]\n[JournalEntry.GetCountry.GetCustom('nte_rank3_line')]\n[JournalEntry.GetCountry.GetCustom('nte_rank4_line')]\n[JournalEntry.GetCountry.GetCustom('nte_rank5_line')]"
+
+ nte_rank1_filled: "第 1 席（5.0）：[GetGlobalVariable('gnl_rank1_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank1_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank1_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ nte_rank1_vacant: "第 1 席（5.0）：#low 虚位以待#!"
+ nte_rank2_filled: "第 2 席（5.0）：[GetGlobalVariable('gnl_rank2_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank2_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank2_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ nte_rank2_vacant: "第 2 席（5.0）：#low 虚位以待#!"
+ nte_rank3_filled: "第 3 席（3.0）：[GetGlobalVariable('gnl_rank3_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank3_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank3_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ nte_rank3_vacant: "第 3 席（3.0）：#low 虚位以待#!"
+ nte_rank4_filled: "第 4 席（1.75）：[GetGlobalVariable('gnl_rank4_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank4_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank4_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ nte_rank4_vacant: "第 4 席（1.75）：#low 虚位以待#!"
+ nte_rank5_filled: "第 5 席（1.75）：[GetGlobalVariable('gnl_rank5_country').GetCountry.GetName] — #v [GetGlobalVariable('gnl_rank5_country').GetCountry.MakeScope.Var('nte_current_tonnage').GetValue|0]#! / #v [GetGlobalVariable('gnl_rank5_country').GetCountry.MakeScope.Var('nte_current_legal_limit').GetValue|0]#!"
+ nte_rank5_vacant: "第 5 席（1.75）：#low 虚位以待#!"
 
  # Status Descs
  nte_je_status_stable: "海权均势维持中 — 缔约列强总体遵守吨位配额"
@@ -12,12 +24,12 @@
  nte_je_status_escalator: "#n 升级条款已激活#!：场外列强海军规模已威胁条约均势"
 
  # Progress Bars
- nte_treaty_stability_bar_name: "条约体系稳固度"
- nte_treaty_stability_bar_desc: "反映全球海军限武条约的合法性与存续前景。归零时条约将彻底解体。"
- nte_treaty_stability_bar_second_desc: "遵守配额维持稳定；违约国家越多、场外威胁越大，稳固度下降越快。"
- nte_stability_drift_tt: "月度/年度条约稳固度变化"
- nte_personal_quota_bar_name: "本国配额占用率（%）"
- nte_personal_quota_bar_desc: "达到 90% 将触发造船提醒；超过 100% 且超过 4 个月宽限期将招致全面制裁。"
+ nte_treaty_stability_bar_name: "条约体系稳固度（遵守配额维持稳定；违约国家与场外威胁越多下降越快，归零则条约解体）"
+ nte_treaty_stability_bar_desc: "稳固度：#v [GetGlobalVariable('gnl_treaty_stability').GetValue|0]/100#!"
+ nte_treaty_stability_bar_second_desc: "年趋势：[GetGlobalVariable('gnl_stability_drift').GetValue|+=0]"
+ nte_stability_drift_tt: "年度条约稳固度趋势"
+ nte_personal_quota_bar_name: "本国配额占用率（达到 90% 触发预警；超过 100% 且超过 4 个月宽限期将招致贸易与恶名制裁）"
+ nte_personal_quota_bar_desc: "配额占用：#v [JournalEntry.GetCountry.MakeScope.Var('nte_quota_usage_pct').GetValue|0]%#!（90%预警 · 100%超限）"
 
  # Outcomes & Completion
  nte_je_complete_tt: "已退出条约或条约体系解散"
@@ -37,7 +49,7 @@
 
  # Scripted Buttons
  nte_btn_propose_revision_vote_name: "召开配额修订大会"
- nte_btn_propose_revision_vote_desc: "向所有成员国发起连续比例制投票（-15% 至 +15% 加权平均），3 个月后按各成员混合票权结算新基准吨位。"
+ nte_btn_propose_revision_vote_desc: "向所有成员国发起连续比例制投票（-15% 至 +15% 加权平均），4 个月后按各成员混合票权结算新基准吨位。"
  nte_btn_propose_isolation_sanction_name: "发起外交孤立质询"
  nte_btn_propose_isolation_sanction_desc: "对持续违约或高恶名的成员国发起集体制裁表决。若获 75% 以上加权赞成，其合法上限将临时削减 25% 并遭受严厉贸易封锁。"
  nte_btn_invoke_escalator_clause_name: "援引升级条款"
@@ -47,8 +59,9 @@
  nte_btn_no_active_vote_tt: "当前没有正在进行的修订大会"
  nte_btn_revision_cooldown_tt: "距离上次修订大会已过冷却期（24 个月）"
  nte_btn_no_active_iso_tt: "当前没有正在进行的孤立制裁表决"
+ nte_btn_iso_cooldown_tt: "距离上次外交孤立质询已过冷却期（24 个月）"
  nte_btn_need_3_members_tt: "条约成员国至少需要 3 个"
- nte_btn_need_breaching_member_tt: "存在正处于违约状态或[concept_infamy]极高的其他成员国"
+ nte_btn_need_breaching_member_tt: "存在非盟友且正处于违约状态或[concept_infamy]极高的其他成员国"
  nte_btn_escalator_threat_tt: "存在触发升级条款阈值的场外大国"
 
  # Alerts
@@ -70,6 +83,9 @@
  nte_falsification_cost_modifier: "秘密海军造假掩护费"
  nte_withdrawal_cost_modifier: "单方面退约外交损毁"
  nte_bilateral_pressure_cost_modifier: "严厉双边海军施压"
+ nte_prestige_loss_small_modifier: "海军条约外交受挫"
+ nte_prestige_loss_major_modifier: "严重海军条约失信"
+ nte_prestige_gain_modifier: "海上外交威望提升"
 
  # Treaty Articles
  bilateral_naval_limitation_treaty: "双边海军限武条约"
@@ -84,12 +100,12 @@
 
  global_naval_limitation_treaty: "全球海军限武条约"
  global_naval_limitation_treaty_desc: "#lore “与其在无底洞般的造舰竞赛中耗尽国库，不如在谈判桌上划定各大洋的吨位疆界。”#!\n邀请各大海上强权共同加入多边海军限武体系，在各缔约国之间建立公开透明的吨位配额与常规外交监督机制。"
- global_naval_limitation_treaty_effects_desc: "•按 #v 5:5:3:1.75:1.75#! 席位比例锁定各成员国的[concept_fleet]有效吨位上限\n•履约成员获得 #g -20%#! 海军维护费与[concept_prestige]红利，并可通过条约大会进行配额修订、外交孤立制裁或激活升级条款"
+ global_naval_limitation_treaty_effects_desc: "•按 #v 5:5:3:1.75:1.75#! 席位比例锁定各成员国的[concept_fleet]有效吨位上限\n•履约成员获得 #g -10%#! 海军维护费与[concept_prestige]红利，并可通过条约大会进行配额修订、外交孤立制裁或激活升级条款"
  global_naval_limitation_treaty_article_short_desc: "[FIRST_COUNTRY.GetFlagTextIcon][FIRST_COUNTRY.GetNameNoFormatting]与[SECOND_COUNTRY.GetFlagTextIcon][SECOND_COUNTRY.GetNameNoFormatting]共同遵守全球海军限武[concept_treaty]配额"
  GLOBAL_NAVAL_LIMITATION_TREATY_POSSIBLE: "缔约双方均须达到[concept_major_power]或更高的[concept_rank]。"
  GLOBAL_NAVAL_LIMITATION_TREATY_AT_WAR: "缔约双方目前不得处于[concept_war]状态。"
  GLOBAL_NAVAL_LIMITATION_TREATY_COLLAPSED: "条约体系瓦解后的 3 年冷却期内无法重新缔结全球限武条约。"
- GLOBAL_NAVAL_LIMITATION_TREATY_FORMED: "若全球海军限武[concept_treaty]已成立，新成员须与当前主席国缔结此[concept_article]。"
+ GLOBAL_NAVAL_LIMITATION_TREATY_FORMED: "若全球海军限武[concept_treaty]已成立，新成员须与任一现行缔约国缔结此[concept_article]。"
  GLOBAL_NAVAL_LIMITATION_TREATY_ALREADY_BOTH_MEMBERS: "缔约双方不得均已加入全球海军限武体系。"
 
  # Events - Global
@@ -188,7 +204,7 @@
  nte_submarine_protocol_modifier: "伦敦潜艇作战议定书"
  nte_naval_race_panic_modifier: "无畏舰竞赛恐慌"
  nte_btn_scrap_obsolete_hulls_name: "拆解老旧主力舰与和平补贴"
- nte_btn_scrap_obsolete_hulls_desc: "将超龄战舰转入拆解并让船坞转产民用，未来 24 个月内有效条约吨位降低 #v 10%#!，提升商业运力与[GetInterestGroupVariant('ig_industrialists',GetPlayer).GetNameWithCountryVariant]好感，但会削减主力舰建造效率（-35%）与力量投射（-10%）并引起[GetInterestGroupVariant('ig_armed_forces',GetPlayer).GetNameWithCountryVariant]不满。"
+ nte_btn_scrap_obsolete_hulls_desc: "在和平时期将超龄战舰转入拆解并让船坞转产民用，未来 24 个月内有效条约吨位降低 #v 10%#!，节省 -5% 海军维护费并提升商业运力（+8%）与[GetInterestGroupVariant('ig_industrialists',ROOT.GetCountry).GetNameWithCountryVariant]好感，但会降低海军基地吞吐量（-15%）、削减主力舰建造效率（-35%）与力量投射（-10%）并引起[GetInterestGroupVariant('ig_armed_forces',ROOT.GetCountry).GetNameWithCountryVariant]不满。"
  nte_btn_submarine_protocol_name: "签署《潜艇作战与商船护航议定书》"
  nte_btn_submarine_protocol_desc: "占用 #v 25#! 点[concept_influence]承诺遵守人道主义商船搜查规则（不可在欺诈期间签署），削弱潜艇破交火力以换取外交声誉、恶名加速消退及条约稳定度。"
  nte_global.7.t: "五年一度国际海军峰会开幕"
@@ -213,7 +229,7 @@
  nte_global.10.b: "严守条约检验红线，重申对重型改装的限制"
  dlc_nte_overhaul: "海军条约 × 海军大修 联名扩展"
  dlc_nte_overhaul_desc: "《海军条约扩展》与《海军大修（10 槽改装）》联名兼容已自动激活。"
- dlc_nte_overhaul_tooltip: "#T [Dlc.GetName]#!\n[Dlc.GetDesc]\n\n• 自动放宽 10 槽超重质变警告阈值（7500 HP / 750 [concept_naval_power_projection]）\n• 解锁联名专属风味事件与动态条约基准调整\n\n#low;emphasis @information! 此 DLC 标签仅在双 Mod 同时启用时显示#!"
+ dlc_nte_overhaul_tooltip: "#T [Dlc.GetName]#!\n[Dlc.GetDesc]\n\n• 自动适配 10 槽超重质变警告阈值（7800 HP / 640 [concept_naval_power_projection]）\n• 联动冻结海军军备竞赛并解锁多槽位重型改装专属事件\n\n#low;emphasis @information! 此 DLC 标签仅在双 Mod 同时启用时显示#!"
  NTE_ACCEPTANCE_NAVAL_FISCAL_PRESSURE: "来自[SCOPE.sCountry('target').GetName]的[concept_fleet]军费开销与财政吃紧压力"
  NTE_ACCEPTANCE_DEFAULT: "来自[SCOPE.sCountry('target').GetName]正处于[concept_default]状态"
  NTE_ACCEPTANCE_NAVY_LAW_DIPLOMATIC: "来自[SCOPE.sCountry('target').GetName]已颁布[GetLawType('law_diplomatic_navy').GetName]（倾向[concept_treaty]协作）"

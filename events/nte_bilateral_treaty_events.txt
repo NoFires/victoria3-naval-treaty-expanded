@@ -61,7 +61,14 @@ nte_bilateral.2 = {
 
 	option = {
 		name = nte_bilateral.2.a # Back down and accept naval slowdown
-		set_variable = { name = nte_bilateral_grace_months value = 0 }
+		if = {
+			limit = { has_variable = nte_bilateral_restricted_flag }
+			set_variable = { name = nte_bilateral_grace_months value = 0 }
+		}
+		if = {
+			limit = { has_variable = nte_bilateral_formally_broken_flag }
+			remove_variable = nte_bilateral_formally_broken_flag
+		}
 		if = {
 			limit = { NOT = { has_modifier = nte_bilateral_breach_penalty } }
 			add_modifier = { name = nte_bilateral_capital_slowdown years = 3 }
@@ -315,6 +322,7 @@ nte_bilateral.20 = {
 			limit = { has_variable = nte_bilateral_enforced_by_war }
 			remove_variable = nte_bilateral_enforced_by_war
 		}
+		change_relations = { country = scope:nte_bilateral_target value = 15 }
 		scope:nte_bilateral_target = {
 			set_variable = {
 				name = nte_bilateral_ratio_pct

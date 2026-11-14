@@ -1,4 +1,5 @@
 # Local AI / editor / OS metadata
+.dsh/
 .dsh-project-memory/
 .vscode/
 .idea/

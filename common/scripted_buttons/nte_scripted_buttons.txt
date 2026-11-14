@@ -25,7 +25,7 @@ nte_btn_propose_revision_vote = {
 
 	effect = {
 		set_global_variable = gnl_voting_active
-		set_global_variable = { name = gnl_voting_months_left value = 3 }
+		set_global_variable = { name = gnl_voting_months_left value = 4 }
 		set_global_variable = { name = gnl_vote_weighted_sum value = 0 }
 		set_global_variable = { name = gnl_vote_total_weight value = 0 }
 		set_global_variable = { name = gnl_revision_cooldown months = 24 }
@@ -65,6 +65,10 @@ nte_btn_propose_isolation_sanction = {
 			NOT = { has_global_variable = gnl_isolation_vote_active }
 		}
 		custom_tooltip = {
+			text = nte_btn_iso_cooldown_tt
+			NOT = { has_global_variable = gnl_isolation_cooldown }
+		}
+		custom_tooltip = {
 			text = nte_btn_need_3_members_tt
 			any_country = {
 				count >= 3
@@ -76,6 +80,10 @@ nte_btn_propose_isolation_sanction = {
 			any_country = {
 				has_variable = gnl_participating_country
 				NOT = { this = root }
+				NOR = {
+					has_treaty_alliance_with = { TARGET = root }
+					has_treaty_defensive_pact_with = { TARGET = root }
+				}
 				OR = {
 					has_modifier = global_naval_limitation_union_penalty
 					infamy >= 50
@@ -89,6 +97,10 @@ nte_btn_propose_isolation_sanction = {
 			limit = {
 				has_variable = gnl_participating_country
 				NOT = { this = root }
+				NOR = {
+					has_treaty_alliance_with = { TARGET = root }
+					has_treaty_defensive_pact_with = { TARGET = root }
+				}
 				OR = {
 					has_modifier = global_naval_limitation_union_penalty
 					infamy >= 50
@@ -99,7 +111,8 @@ nte_btn_propose_isolation_sanction = {
 			set_global_variable = { name = gnl_isolation_target value = this }
 		}
 		set_global_variable = gnl_isolation_vote_active
-		set_global_variable = { name = gnl_isolation_months_left value = 2 }
+		set_global_variable = { name = gnl_isolation_months_left value = 3 }
+		set_global_variable = { name = gnl_isolation_cooldown months = 24 }
 		set_global_variable = { name = gnl_iso_yes_weight value = 0 }
 		set_global_variable = { name = gnl_iso_total_weight value = 0 }
 		every_country = {
@@ -114,16 +127,32 @@ nte_btn_propose_isolation_sanction = {
 	}
 
 	ai_chance = {
-		value = 10
+		value = 0
 		if = {
 			limit = {
-				OR = {
+				NOR = {
 					has_modifier = global_naval_limitation_union_penalty
 					has_modifier = nte_isolated_sanction_modifier
 					infamy >= 50
 				}
+				any_country = {
+					has_variable = gnl_participating_country
+					NOT = { this = root }
+					NOR = {
+						has_treaty_alliance_with = { TARGET = root }
+						has_treaty_defensive_pact_with = { TARGET = root }
+					}
+					OR = {
+						has_modifier = global_naval_limitation_union_penalty
+						infamy >= 50
+					}
+					OR = {
+						any_rival_country = { this = root }
+						"relations(root)" < 0
+					}
+				}
 			}
-			add = -20
+			add = 15
 		}
 	}
 }
@@ -143,11 +172,23 @@ nte_btn_invoke_escalator_clause = {
 
 	effect = {
 		add_modifier = { name = nte_escalator_clause_modifier years = 3 }
+		set_variable = { name = nte_escalator_clause_active years = 3 }
 		nte_update_country_tonnage_vars = yes
+		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=ESCALATOR_INVOKED|country=[THIS.GetCountry.GetNameNoFormatting]"
 	}
 
 	ai_chance = {
 		value = 15
+		if = {
+			limit = {
+				OR = {
+					has_variable = nte_global_near_limit_flag
+					has_variable = nte_global_over_limit_flag
+					is_at_war = yes
+				}
+			}
+			add = 35
+		}
 	}
 }
 
@@ -173,6 +214,7 @@ nte_btn_peaceful_withdrawal = {
 			add_modifier = { name = nte_prestige_loss_small_modifier years = 2 }
 			add_modifier = { name = nte_withdrawal_cost_modifier years = 2 }
 		}
+		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=PEACEFUL_WITHDRAWAL|country=[THIS.GetCountry.GetNameNoFormatting]"
 		set_variable = { name = nte_withdrawn_from_treaty months = 2 }
 		save_scope_as = withdrawing_country
 		nte_global_on_withdrawal = yes
@@ -180,6 +222,29 @@ nte_btn_peaceful_withdrawal = {
 
 	ai_chance = {
 		value = 0
+		if = {
+			limit = {
+				has_global_variable = gnl_escalator_threat_active
+				has_variable = nte_global_over_limit_flag
+				OR = {
+					has_law_or_variant = law_type:law_professional_navy
+					has_strategy = ai_strategy_colonial_expansion
+					has_strategy = ai_strategy_territorial_expansion
+				}
+			}
+			add = 25
+		}
+		else_if = {
+			limit = {
+				influence >= 250
+				infamy < 20
+				has_modifier = global_naval_limitation_union_penalty
+				has_law_or_variant = law_type:law_professional_navy
+				scaled_debt <= 0.05
+				net_fixed_income > 0
+			}
+			add = 8
+		}
 	}
 }
 
@@ -296,9 +361,12 @@ nte_btn_naval_intelligence_exchange = {
 	effect = {
 		set_variable = { name = nte_intel_cooldown months = 24 }
 		add_modifier = { name = nte_naval_intelligence_exchange_modifier months = 12 }
-		je:global_naval_limitation_union ?= {
-			add_progress = { value = 1 name = nte_treaty_stability_bar }
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = 1 }
+		nte_sync_global_stability_bars = yes
 		every_country = {
 			limit = { has_variable = gnl_participating_country }
 			nte_update_country_tonnage_vars = yes
@@ -306,7 +374,18 @@ nte_btn_naval_intelligence_exchange = {
 	}
 
 	ai_chance = {
-		value = 10
+		value = 0
+		if = {
+			limit = {
+				influence >= 150
+				bureaucracy >= 50
+			}
+			add = 12
+			if = {
+				limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+				add = 15
+			}
+		}
 	}
 }
 
@@ -347,6 +426,7 @@ nte_btn_scrap_obsolete_hulls = {
 
 	possible = {
 		has_variable = gnl_participating_country
+		is_at_war = no
 		NOT = { has_variable = nte_scrapping_program_active }
 		NOT = { has_variable = nte_scrap_cooldown }
 		nte_country_effective_tonnage > 0
@@ -387,33 +467,54 @@ nte_btn_submarine_protocol = {
 		NOT = { has_modifier = nte_submarine_protocol_modifier }
 		NOT = { has_modifier = nte_isolated_sanction_modifier }
 		NOT = { has_variable = nte_tonnage_falsification_active }
-		influence >= 50
+		influence >= 25
 	}
 
 	effect = {
 		add_modifier = { name = nte_submarine_protocol_modifier years = 5 }
-		je:global_naval_limitation_union ?= {
-			add_progress = { value = 3 name = nte_treaty_stability_bar }
+		set_variable = { name = nte_submarine_protocol_active years = 5 }
+		if = {
+			limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+			set_global_variable = { name = gnl_treaty_stability value = 75 }
 		}
+		change_global_variable = { name = gnl_treaty_stability add = 3 }
+		nte_sync_global_stability_bars = yes
+		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=SUBMARINE_PROTOCOL|country=[THIS.GetCountry.GetNameNoFormatting]"
 	}
 
 	ai_chance = {
-		value = 15
+		value = 0
 		if = {
-			limit = { infamy > 15 }
-			add = 25
-		}
-		if = {
-			limit = { has_law_or_variant = law_type:law_merchant_navy }
-			add = 30
-		}
-		if = {
-			limit = { has_law_or_variant = law_type:law_diplomatic_navy }
-			add = 20
-		}
-		if = {
-			limit = { has_law_or_variant = law_type:law_jeune_ecole }
-			add = -40
+			limit = {
+				is_at_war = no
+				influence >= 100
+			}
+			add = 12
+			if = {
+				limit = { infamy > 15 }
+				add = 25
+			}
+			if = {
+				limit = { has_law_or_variant = law_type:law_merchant_navy }
+				add = 30
+			}
+			if = {
+				limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+				add = 20
+			}
+			if = {
+				limit = { has_law_or_variant = law_type:law_jeune_ecole }
+				add = -40
+			}
+			if = {
+				limit = {
+					infamy <= 25
+					any_scope_ship = {
+						is_ship_type = ship_type:ship_type_submarine
+					}
+				}
+				add = -35
+			}
 		}
 	}
 }

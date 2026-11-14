@@ -8,7 +8,7 @@
 		friendly
 	}
 
-	usage_limit = once_per_side
+	usage_limit = once_per_treaty
 
 	unlocked_by_technologies = {
 		international_relations
@@ -42,8 +42,8 @@
 			text = GLOBAL_NAVAL_LIMITATION_TREATY_FORMED
 			OR = {
 				NOT = { has_global_variable = gnl_formed }
-				global_var:global_gnl_chair_country ?= root
-				global_var:global_gnl_chair_country ?= scope:other_country
+				has_variable = gnl_participating_country
+				scope:other_country = { has_variable = gnl_participating_country }
 			}
 		}
 		custom_tooltip = {
@@ -86,16 +86,19 @@
 			text = GLOBAL_NAVAL_LIMITATION_TREATY_FORMED
 			OR = {
 				NOT = { has_global_variable = gnl_formed }
-				global_var:global_gnl_chair_country ?= scope:first_country
-				global_var:global_gnl_chair_country ?= scope:second_country
+				scope:first_country = { has_variable = gnl_participating_country }
+				scope:second_country = { has_variable = gnl_participating_country }
 			}
 		}
 		custom_tooltip = {
 			text = GLOBAL_NAVAL_LIMITATION_TREATY_ALREADY_BOTH_MEMBERS
-			NOT = {
-				AND = {
-					scope:first_country = { has_variable = gnl_participating_country }
-					scope:second_country = { has_variable = gnl_participating_country }
+			OR = {
+				scope:treaty ?= { is_renegotiation = yes }
+				NOT = {
+					AND = {
+						scope:first_country = { has_variable = gnl_participating_country }
+						scope:second_country = { has_variable = gnl_participating_country }
+					}
 				}
 			}
 		}
@@ -114,7 +117,7 @@
 	}
 
 	on_break = {
-		nte_global_on_withdrawal = yes
+		nte_global_on_break_penalty = yes
 	}
 
 	ai = {
@@ -127,7 +130,7 @@
 		}
 
 		article_ai_usage = {
-			request
+			offer
 		}
 
 		inherent_accept_score = {
@@ -219,13 +222,13 @@
 			if = {
 				limit = {
 					exists = scope:other_country
-					scope:other_country.navy_size > navy_size
+					scope:other_country.nte_diplomatic_naval_strength > nte_diplomatic_naval_strength
 				}
 				add = {
 					desc = "NTE_ACCEPTANCE_NAVAL_INFERIOR"
-					value = scope:other_country.navy_size
+					value = scope:other_country.nte_diplomatic_naval_strength
 					divide = {
-						value = navy_size
+						value = nte_diplomatic_naval_strength
 						min = 1
 					}
 					subtract = 1
@@ -237,13 +240,13 @@
 			else_if = {
 				limit = {
 					exists = scope:other_country
-					navy_size > scope:other_country.navy_size
+					nte_diplomatic_naval_strength > scope:other_country.nte_diplomatic_naval_strength
 				}
 				add = {
 					desc = "NTE_ACCEPTANCE_NAVAL_SUPERIOR"
-					value = navy_size
+					value = nte_diplomatic_naval_strength
 					divide = {
-						value = scope:other_country.navy_size
+						value = scope:other_country.nte_diplomatic_naval_strength
 						min = 1
 					}
 					subtract = 1
@@ -342,41 +345,22 @@
 			if = {
 				limit = {
 					has_global_variable = gnl_tonnage_base_limit
-					OR = {
-						AND = {
-							country_rank >= rank_value:great_power
-							nte_country_effective_tonnage > {
-								value = global_var:gnl_tonnage_base_limit
-								multiply = 1.67
-							}
-						}
-						AND = {
-							country_rank < rank_value:great_power
-							nte_country_effective_tonnage > global_var:gnl_tonnage_base_limit
-						}
+					nte_country_cached_effective_tonnage > {
+						value = global_var:gnl_tonnage_base_limit
+						multiply = nte_prospective_tier_ratio
 					}
 				}
 				add = {
 					desc = "NTE_ACCEPTANCE_OVER_BASELINE"
-					value = nte_country_effective_tonnage
-					if = {
-						limit = { country_rank >= rank_value:great_power }
-						subtract = {
-							value = global_var:gnl_tonnage_base_limit
-							multiply = 1.67
-						}
-						divide = {
-							value = global_var:gnl_tonnage_base_limit
-							multiply = 1.67
-							min = 1
-						}
+					value = nte_country_cached_effective_tonnage
+					subtract = {
+						value = global_var:gnl_tonnage_base_limit
+						multiply = nte_prospective_tier_ratio
 					}
-					else = {
-						subtract = global_var:gnl_tonnage_base_limit
-						divide = {
-							value = global_var:gnl_tonnage_base_limit
-							min = 1
-						}
+					divide = {
+						value = global_var:gnl_tonnage_base_limit
+						multiply = nte_prospective_tier_ratio
+						min = 1
 					}
 					multiply = -40
 					min = -50

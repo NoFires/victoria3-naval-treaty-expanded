@@ -1,0 +1,59 @@
+﻿nte_rank1_line = {
+	type = country
+	text = {
+		trigger = { exists = global_var:gnl_rank1_country }
+		localization_key = nte_rank1_filled
+	}
+	text = {
+		trigger = { NOT = { exists = global_var:gnl_rank1_country } }
+		localization_key = nte_rank1_vacant
+	}
+}
+
+nte_rank2_line = {
+	type = country
+	text = {
+		trigger = { exists = global_var:gnl_rank2_country }
+		localization_key = nte_rank2_filled
+	}
+	text = {
+		trigger = { NOT = { exists = global_var:gnl_rank2_country } }
+		localization_key = nte_rank2_vacant
+	}
+}
+
+nte_rank3_line = {
+	type = country
+	text = {
+		trigger = { exists = global_var:gnl_rank3_country }
+		localization_key = nte_rank3_filled
+	}
+	text = {
+		trigger = { NOT = { exists = global_var:gnl_rank3_country } }
+		localization_key = nte_rank3_vacant
+	}
+}
+
+nte_rank4_line = {
+	type = country
+	text = {
+		trigger = { exists = global_var:gnl_rank4_country }
+		localization_key = nte_rank4_filled
+	}
+	text = {
+		trigger = { NOT = { exists = global_var:gnl_rank4_country } }
+		localization_key = nte_rank4_vacant
+	}
+}
+
+nte_rank5_line = {
+	type = country
+	text = {
+		trigger = { exists = global_var:gnl_rank5_country }
+		localization_key = nte_rank5_filled
+	}
+	text = {
+		trigger = { NOT = { exists = global_var:gnl_rank5_country } }
+		localization_key = nte_rank5_vacant
+	}
+}

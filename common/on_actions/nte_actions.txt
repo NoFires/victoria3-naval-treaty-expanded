@@ -1,8 +1,32 @@
-﻿# Naval Treaty Expanded - On Actions (1.15)
-
-on_monthly_pulse_country = {
+﻿on_monthly_pulse_country = {
 	on_actions = {
+		nte_monthly_tonnage_cache_action
 		nte_monthly_bilateral_action
+		nte_monthly_global_chair_fallback
+	}
+}
+
+on_yearly_pulse_country = {
+	on_actions = {
+		nte_yearly_telemetry_pulse
+	}
+}
+
+nte_monthly_tonnage_cache_action = {
+	effect = {
+		if = {
+			limit = {
+				OR = {
+					navy_size > 0
+					has_variable = nte_cached_tonnage
+				}
+			}
+			set_variable = {
+				name = nte_cached_tonnage
+				value = nte_country_effective_tonnage
+				months = 2
+			}
+		}
 	}
 }
 
@@ -11,6 +35,195 @@ nte_monthly_bilateral_action = {
 		if = {
 			limit = { has_variable = nte_bilateral_restricted_flag }
 			nte_bilateral_monthly_check = yes
+		}
+	}
+}
+
+nte_monthly_global_chair_fallback = {
+	effect = {
+		if = {
+			limit = {
+				has_global_variable = gnl_formed
+				has_variable = gnl_participating_country
+			}
+			if = {
+				limit = {
+					any_country = {
+						count < 2
+						is_country_alive = yes
+						has_variable = gnl_participating_country
+					}
+				}
+				nte_dissolve_global_treaty = yes
+			}
+			else = {
+				if = {
+					limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
+					add_journal_entry = { type = global_naval_limitation_union }
+				}
+				if = {
+					limit = {
+						OR = {
+							NOT = { exists = global_var:global_gnl_chair_country }
+							NOT = {
+								global_var:global_gnl_chair_country = {
+									is_country_alive = yes
+									has_variable = gnl_participating_country
+								}
+							}
+						}
+					}
+					ordered_country = {
+						limit = {
+							is_country_alive = yes
+							has_variable = gnl_participating_country
+						}
+						order_by = prestige
+						position = 0
+						set_global_variable = {
+							name = global_gnl_chair_country
+							value = this
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+nte_yearly_telemetry_pulse = {
+	effect = {
+		if = {
+			limit = {
+				is_country_alive = yes
+				OR = {
+					navy_size >= 15
+					has_variable = gnl_participating_country
+					has_variable = nte_bilateral_restricted_flag
+				}
+			}
+			set_variable = { name = nte_tel_navy value = navy_size }
+			set_variable = { name = nte_tel_cap value = 0 }
+			set_variable = { name = nte_tel_cru value = 0 }
+			set_variable = { name = nte_tel_dd value = 0 }
+			set_variable = { name = nte_tel_sub value = 0 }
+			set_variable = { name = nte_tel_dn value = 0 }
+			every_scope_ship = {
+				if = {
+					limit = { ship_group = ship_group:ship_group_capital_ships }
+					prev = { change_variable = { name = nte_tel_cap add = 1 } }
+					if = {
+						limit = {
+							OR = {
+								is_ship_type = ship_type:ship_type_pre_dreadnought
+								is_ship_type = ship_type:ship_type_dreadnought
+								is_ship_type = ship_type:ship_type_super_dreadnought
+							}
+						}
+						prev = { change_variable = { name = nte_tel_dn add = 1 } }
+					}
+				}
+				else_if = {
+					limit = {
+						ship_group = ship_group:ship_group_cruisers
+						NOR = {
+							is_ship_type = ship_type:ship_type_early_troop_ship
+							is_ship_type = ship_type:ship_type_troop_ship
+						}
+					}
+					prev = { change_variable = { name = nte_tel_cru add = 1 } }
+				}
+				else_if = {
+					limit = { is_ship_type = ship_type:ship_type_submarine }
+					prev = { change_variable = { name = nte_tel_sub add = 1 } }
+				}
+				else_if = {
+					limit = { ship_group = ship_group:ship_group_torpedo_craft }
+					prev = { change_variable = { name = nte_tel_dd add = 1 } }
+				}
+			}
+			set_variable = { name = nte_tel_ton value = nte_country_effective_tonnage }
+			if = {
+				limit = { has_variable = nte_current_legal_limit }
+				set_variable = { name = nte_tel_lim value = var:nte_current_legal_limit }
+			}
+			else_if = {
+				limit = { has_variable = nte_bilateral_cap }
+				set_variable = { name = nte_tel_lim value = var:nte_bilateral_cap }
+			}
+			else = {
+				set_variable = { name = nte_tel_lim value = 0 }
+			}
+			if = {
+				limit = { has_variable = gnl_participating_country }
+				if = {
+					limit = { has_variable = nte_global_over_limit_flag }
+					set_variable = { name = nte_tel_gnl value = 3 }
+				}
+				else_if = {
+					limit = { has_variable = nte_country_holiday_accepted }
+					set_variable = { name = nte_tel_gnl value = 4 }
+				}
+				else_if = {
+					limit = { has_variable = nte_global_near_limit_flag }
+					set_variable = { name = nte_tel_gnl value = 2 }
+				}
+				else = {
+					set_variable = { name = nte_tel_gnl value = 1 }
+				}
+			}
+			else = {
+				set_variable = { name = nte_tel_gnl value = 0 }
+			}
+			if = {
+				limit = { has_variable = nte_bilateral_restricted_flag }
+				if = {
+					limit = { has_variable = nte_bilateral_over_limit_flag }
+					set_variable = { name = nte_tel_bil value = 2 }
+				}
+				else = {
+					set_variable = { name = nte_tel_bil value = 1 }
+				}
+			}
+			else = {
+				set_variable = { name = nte_tel_bil value = 0 }
+			}
+			if = {
+				limit = { has_variable = naval_arms_race_completed }
+				set_variable = { name = nte_tel_race value = 2 }
+			}
+			else_if = {
+				limit = { has_variable = naval_arms_race_frozen_cd }
+				set_variable = { name = nte_tel_race value = 3 }
+			}
+			else_if = {
+				limit = { has_global_variable = naval_overhaul_active }
+				if = {
+					limit = {
+						has_technology_researched = dreadnought_tech
+						navy_size >= 40
+					}
+					set_variable = { name = nte_tel_race value = 1 }
+				}
+				else = {
+					set_variable = { name = nte_tel_race value = 0 }
+				}
+			}
+			else = {
+				set_variable = { name = nte_tel_race value = 0 }
+			}
+			debug_log = "V3NAVY_TELEMETRY|date=[TimeKeeper.GetCurrentDate.GetString]|country=[THIS.GetCountry.GetNameNoFormatting]|navy=[THIS.GetCountry.MakeScope.Var('nte_tel_navy').GetValue|0]|cap=[THIS.GetCountry.MakeScope.Var('nte_tel_cap').GetValue|0]|dn=[THIS.GetCountry.MakeScope.Var('nte_tel_dn').GetValue|0]|cru=[THIS.GetCountry.MakeScope.Var('nte_tel_cru').GetValue|0]|dd=[THIS.GetCountry.MakeScope.Var('nte_tel_dd').GetValue|0]|sub=[THIS.GetCountry.MakeScope.Var('nte_tel_sub').GetValue|0]|ton=[THIS.GetCountry.MakeScope.Var('nte_tel_ton').GetValue|0]|lim=[THIS.GetCountry.MakeScope.Var('nte_tel_lim').GetValue|0]|gnl=[THIS.GetCountry.MakeScope.Var('nte_tel_gnl').GetValue|0]|bil=[THIS.GetCountry.MakeScope.Var('nte_tel_bil').GetValue|0]|race=[THIS.GetCountry.MakeScope.Var('nte_tel_race').GetValue|0]"
+			remove_variable = nte_tel_navy
+			remove_variable = nte_tel_cap
+			remove_variable = nte_tel_cru
+			remove_variable = nte_tel_dd
+			remove_variable = nte_tel_sub
+			remove_variable = nte_tel_dn
+			remove_variable = nte_tel_ton
+			remove_variable = nte_tel_lim
+			remove_variable = nte_tel_gnl
+			remove_variable = nte_tel_bil
+			remove_variable = nte_tel_race
 		}
 	}
 }

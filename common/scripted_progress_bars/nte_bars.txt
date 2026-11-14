@@ -12,11 +12,16 @@ nte_treaty_stability_bar = {
 	marker = yes
 
 	yearly_progress = {
-		if = {
-			limit = { exists = global_var:gnl_stability_drift }
-			add = {
-				desc = "nte_stability_drift_tt"
-				value = global_var:gnl_stability_drift
+		scope:journal_entry ?= {
+			progress_condition = {
+				limit = {
+					exists = global_var:gnl_stability_drift
+					NOT = { global_var:gnl_stability_drift = 0 }
+				}
+				add = {
+					desc = "nte_stability_drift_tt"
+					value = global_var:gnl_stability_drift
+				}
 			}
 		}
 	}
@@ -31,7 +36,7 @@ nte_personal_quota_bar = {
 	desc = "nte_personal_quota_bar_desc"
 
 	progress_texture = "gfx/interface/progressbar/progressbar_gold.dds"
-	background_texture = "gfx/interface/progressbar/progressbar_default_bg.dds"
+	background_texture = "gfx/interface/progressbar/progressbar_default.dds"
 	glow_texture = "gfx/interface/progressbar/progressbar_gold_glow.dds"
 	glow_line_texture = "gfx/interface/progressbar/progressbar_gold_glow_line.dds"
 

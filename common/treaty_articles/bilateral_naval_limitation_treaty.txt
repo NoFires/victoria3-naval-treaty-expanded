@@ -13,16 +13,17 @@
 	maintenance_paid_by = target_country
 
 	visible = {
-		country_rank >= rank_value:unrecognized_major_power
 		is_revolutionary = no
 	}
 
 	possible = {
+		scope:other_country = {
+			country_rank >= rank_value:unrecognized_major_power
+			is_revolutionary = no
+		}
 		custom_tooltip = {
 			text = BILATERAL_NAVAL_LIMITATION_TREATY_POSSIBLE
-			scope:other_country = {
-				nte_country_effective_tonnage > 0
-			}
+			nte_country_cached_effective_tonnage > 0
 		}
 	}
 
@@ -87,7 +88,7 @@
 
 	on_enforced = {
 		scope:article_options.target_country = {
-			set_variable = { name = nte_bilateral_enforced_by_war months = 1 }
+			set_variable = { name = nte_bilateral_enforced_by_war months = 4 }
 		}
 		scope:article_options.source_country = {
 			if = {
@@ -178,13 +179,13 @@
 
 				if = {
 					limit = {
-						navy_size >= scope:target_country.navy_size
+						nte_diplomatic_naval_strength >= scope:target_country.nte_diplomatic_naval_strength
 					}
 					add = {
 						desc = "NTE_ACCEPTANCE_BILATERAL_STRONGER"
-						value = navy_size
+						value = nte_diplomatic_naval_strength
 						divide = {
-							value = scope:target_country.navy_size
+							value = scope:target_country.nte_diplomatic_naval_strength
 							min = 1
 						}
 						subtract = 1
@@ -196,9 +197,9 @@
 				else = {
 					add = {
 						desc = "NTE_ACCEPTANCE_BILATERAL_OUTGUNNED"
-						value = scope:target_country.navy_size
+						value = scope:target_country.nte_diplomatic_naval_strength
 						divide = {
-							value = navy_size
+							value = nte_diplomatic_naval_strength
 							min = 1
 						}
 						subtract = 1

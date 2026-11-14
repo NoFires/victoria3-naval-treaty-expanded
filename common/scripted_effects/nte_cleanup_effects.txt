@@ -1,0 +1,45 @@
+﻿nte_clear_all_global_modifiers = {
+	if = { limit = { has_modifier = global_naval_limitation_union_bonus } remove_modifier = global_naval_limitation_union_bonus }
+	if = { limit = { has_modifier = nte_capital_ship_construction_slowdown } remove_modifier = nte_capital_ship_construction_slowdown }
+	if = { limit = { has_modifier = nte_grace_period_warning_modifier } remove_modifier = nte_grace_period_warning_modifier }
+	if = { limit = { has_modifier = global_naval_limitation_union_penalty } remove_modifier = global_naval_limitation_union_penalty }
+	if = { limit = { has_modifier = nte_isolated_sanction_modifier } remove_modifier = nte_isolated_sanction_modifier }
+	if = { limit = { has_modifier = nte_escalator_clause_modifier } remove_modifier = nte_escalator_clause_modifier }
+	if = { limit = { has_modifier = nte_naval_holiday_modifier } remove_modifier = nte_naval_holiday_modifier }
+	if = { limit = { has_modifier = nte_mothballed_fleet_modifier } remove_modifier = nte_mothballed_fleet_modifier }
+	if = { limit = { has_modifier = nte_naval_intelligence_exchange_modifier } remove_modifier = nte_naval_intelligence_exchange_modifier }
+	if = { limit = { has_modifier = nte_falsification_cost_modifier } remove_modifier = nte_falsification_cost_modifier }
+	if = { limit = { has_modifier = nte_scrap_dividend_modifier } remove_modifier = nte_scrap_dividend_modifier }
+	if = { limit = { has_modifier = nte_submarine_protocol_modifier } remove_modifier = nte_submarine_protocol_modifier }
+}
+
+nte_clear_all_bilateral_modifiers = {
+	if = { limit = { has_modifier = nte_bilateral_capital_slowdown } remove_modifier = nte_bilateral_capital_slowdown }
+	if = { limit = { has_modifier = nte_bilateral_breach_penalty } remove_modifier = nte_bilateral_breach_penalty }
+	if = { limit = { has_modifier = nte_bilateral_pressure_cost_modifier } remove_modifier = nte_bilateral_pressure_cost_modifier }
+}
+
+# Single Source of Truth for Global Treaty Stability (0..100)
+nte_sync_global_stability_bars = {
+	if = {
+		limit = { NOT = { has_global_variable = gnl_treaty_stability } }
+		set_global_variable = { name = gnl_treaty_stability value = 75 }
+	}
+	set_global_variable = {
+		name = gnl_treaty_stability
+		value = {
+			value = global_var:gnl_treaty_stability
+			min = 0
+			max = 100
+		}
+	}
+	every_country = {
+		limit = { has_journal_entry = global_naval_limitation_union }
+		je:global_naval_limitation_union ?= {
+			set_bar_progress = {
+				value = global_var:gnl_treaty_stability
+				name = nte_treaty_stability_bar
+			}
+		}
+	}
+}

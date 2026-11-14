@@ -2,7 +2,7 @@
 
 nte_tonnage_warning_alert = {
 	script_context = player_country
-	texture = "gfx/interface/icons/alert_icons/diplomatic_action.dds"
+	texture = "gfx/interface/icons/alert_icons/treaty_non_fulfillment.dds"
 	open_panel = journal
 	type = important_action
 	alert_group = treaty_article_in_danger
@@ -25,7 +25,7 @@ nte_tonnage_warning_alert = {
 
 nte_tonnage_exceeded_alert = {
 	script_context = player_country
-	texture = "gfx/interface/icons/alert_icons/has_insufficient_convoys.dds"
+	texture = "gfx/interface/icons/alert_icons/naval_hostilities.dds"
 	open_panel = journal
 	type = angry_important_action
 	alert_group = treaty_article_in_danger

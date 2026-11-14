@@ -1,0 +1,231 @@
+﻿nte_bilateral_on_start = {
+	scope:article_options.source_country = {
+		set_variable = nte_bilateral_restricted_flag
+		set_variable = {
+			name = nte_bilateral_enforcer
+			value = scope:article_options.target_country
+		}
+		set_variable = {
+			name = nte_bilateral_ratio_pct
+			value = 60
+		}
+		set_variable = {
+			name = nte_bilateral_tonnage
+			value = nte_country_effective_tonnage
+		}
+		set_variable = {
+			name = nte_bilateral_cap
+			value = {
+				value = scope:article_options.target_country.nte_country_effective_tonnage
+				multiply = 60
+				divide = 100
+				min = 20
+				round = yes
+			}
+		}
+		add_modifier = { name = nte_bilateral_capital_slowdown months = 2 }
+		save_scope_as = nte_bilateral_target
+		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=BILATERAL_STARTED|restricted=[THIS.GetCountry.GetNameNoFormatting]|enforcer=[THIS.GetCountry.MakeScope.Var('nte_bilateral_enforcer').GetCountry.GetNameNoFormatting]"
+	}
+	scope:article_options.target_country = {
+		trigger_event = { id = nte_bilateral.20 days = 1 }
+	}
+}
+
+nte_bilateral_on_end_clean = {
+	if = {
+		limit = { exists = scope:article.source_country }
+		scope:article.source_country = { save_scope_as = nte_bilateral_clean_target }
+	}
+	else_if = {
+		limit = { exists = scope:article_options.source_country }
+		scope:article_options.source_country = { save_scope_as = nte_bilateral_clean_target }
+	}
+	scope:nte_bilateral_clean_target ?= {
+		remove_variable = nte_bilateral_restricted_flag
+		remove_variable = nte_bilateral_enforcer
+		remove_variable = nte_bilateral_ratio_pct
+		remove_variable = nte_bilateral_near_limit_flag
+		remove_variable = nte_bilateral_over_limit_flag
+		remove_variable = nte_bilateral_grace_months
+		remove_variable = nte_bilateral_crisis_triggered
+		remove_variable = nte_bilateral_cap
+		remove_variable = nte_bilateral_tonnage
+		nte_clear_all_bilateral_modifiers = yes
+	}
+}
+
+nte_bilateral_monthly_check = {
+	if = {
+		limit = {
+			has_variable = nte_bilateral_restricted_flag
+			has_variable = nte_bilateral_enforcer
+			has_variable = nte_bilateral_ratio_pct
+		}
+		save_scope_as = nte_restricted_country_check
+		if = {
+			limit = {
+				OR = {
+					NOT = { exists = var:nte_bilateral_enforcer }
+					var:nte_bilateral_enforcer = { is_country_alive = no }
+					NOT = {
+						any_scope_treaty = {
+							any_scope_article = {
+								has_type = bilateral_naval_limitation_treaty
+								source_country = scope:nte_restricted_country_check
+							}
+						}
+					}
+				}
+			}
+			remove_variable = nte_bilateral_restricted_flag
+			remove_variable = nte_bilateral_enforcer
+			remove_variable = nte_bilateral_ratio_pct
+			remove_variable = nte_bilateral_near_limit_flag
+			remove_variable = nte_bilateral_over_limit_flag
+			remove_variable = nte_bilateral_grace_months
+			remove_variable = nte_bilateral_crisis_triggered
+			remove_variable = nte_bilateral_cap
+			remove_variable = nte_bilateral_tonnage
+			nte_clear_all_bilateral_modifiers = yes
+		}
+		else = {
+			set_local_variable = {
+				name = my_tonnage
+				value = nte_country_effective_tonnage
+			}
+			set_variable = {
+				name = nte_cached_tonnage
+				value = local_var:my_tonnage
+				months = 2
+			}
+			var:nte_bilateral_enforcer = {
+				set_local_variable = {
+					name = enforcer_tonnage
+					value = nte_country_cached_effective_tonnage
+				}
+			}
+			set_local_variable = {
+				name = bilateral_cap
+				value = {
+					value = local_var:enforcer_tonnage
+					multiply = var:nte_bilateral_ratio_pct
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+			set_variable = { name = nte_bilateral_tonnage value = local_var:my_tonnage }
+			set_variable = { name = nte_bilateral_cap value = local_var:bilateral_cap }
+			if = {
+				limit = { local_var:my_tonnage > local_var:bilateral_cap }
+				set_variable = nte_bilateral_over_limit_flag
+				remove_variable = nte_bilateral_near_limit_flag
+				if = {
+					limit = { NOT = { has_variable = nte_bilateral_grace_months } }
+					set_variable = { name = nte_bilateral_grace_months value = 1 }
+				}
+				else = {
+					change_variable = { name = nte_bilateral_grace_months add = 1 }
+				}
+				if = {
+					limit = { var:nte_bilateral_grace_months <= 3 }
+					add_modifier = { name = nte_bilateral_capital_slowdown months = 2 }
+				}
+				else = {
+					if = { limit = { has_modifier = nte_bilateral_capital_slowdown } remove_modifier = nte_bilateral_capital_slowdown }
+					add_modifier = { name = nte_bilateral_breach_penalty months = 2 }
+				}
+				if = {
+					limit = {
+						var:nte_bilateral_grace_months >= 4
+						NOT = { has_variable = nte_bilateral_crisis_triggered }
+					}
+					set_variable = { name = nte_bilateral_crisis_triggered months = 24 }
+					save_scope_as = nte_breaker
+					var:nte_bilateral_enforcer = { save_scope_as = nte_enforcer }
+					if = {
+						limit = {
+							scope:nte_enforcer = {
+								"relations(scope:nte_breaker)" >= 20
+							}
+						}
+						scope:nte_enforcer = {
+							trigger_event = { id = nte_bilateral.10 days = 3 }
+						}
+					}
+					else = {
+						scope:nte_enforcer = {
+							trigger_event = { id = nte_bilateral.1 days = 3 }
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					local_var:my_tonnage >= {
+						value = local_var:bilateral_cap
+						multiply = 0.90
+					}
+				}
+				set_variable = nte_bilateral_near_limit_flag
+				remove_variable = nte_bilateral_over_limit_flag
+				remove_variable = nte_bilateral_grace_months
+				nte_clear_all_bilateral_modifiers = yes
+			}
+			else = {
+				remove_variable = nte_bilateral_near_limit_flag
+				remove_variable = nte_bilateral_over_limit_flag
+				remove_variable = nte_bilateral_grace_months
+				nte_clear_all_bilateral_modifiers = yes
+			}
+		}
+	}
+}
+
+nte_bilateral_on_break_handler = {
+	if = {
+		limit = { exists = scope:article.source_country }
+		scope:article.source_country = { save_scope_as = nte_bil_src }
+		scope:article.target_country = { save_scope_as = nte_bil_tgt }
+	}
+	else_if = {
+		limit = { exists = scope:article_options.source_country }
+		scope:article_options.source_country = { save_scope_as = nte_bil_src }
+		scope:article_options.target_country = { save_scope_as = nte_bil_tgt }
+	}
+
+	if = {
+		limit = {
+			exists = scope:withdrawing_country
+			exists = scope:nte_bil_src
+			exists = scope:nte_bil_tgt
+			scope:withdrawing_country = scope:nte_bil_src
+		}
+		scope:nte_bil_src = {
+			save_scope_as = nte_breaker
+			set_variable = { name = nte_bilateral_formally_broken_flag months = 3 }
+		}
+		scope:nte_bil_tgt = { save_scope_as = nte_enforcer }
+		nte_bilateral_on_end_clean = yes
+
+		if = {
+			limit = {
+				scope:nte_enforcer = {
+					"relations(scope:nte_breaker)" >= 20
+				}
+			}
+			scope:nte_enforcer = {
+				trigger_event = { id = nte_bilateral.10 days = 3 }
+			}
+		}
+		else = {
+			scope:nte_enforcer = {
+				trigger_event = { id = nte_bilateral.1 days = 3 }
+			}
+		}
+	}
+	else = {
+		nte_bilateral_on_end_clean = yes
+	}
+}
