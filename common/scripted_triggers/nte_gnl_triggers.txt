@@ -1,0 +1,9 @@
+﻿# Great powers that may be invited to accede to the Global Naval Limitation Treaty.
+nte_gnl_invitation_eligible = {
+	is_country_alive = yes
+	country_rank >= rank_value:great_power
+	is_subject = no
+	is_revolutionary = no
+	NOT = { has_variable = gnl_participating_country }
+	NOT = { has_variable = nte_withdrawn_from_treaty }
+}

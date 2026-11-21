@@ -98,6 +98,14 @@
 		}
 	}
 
+	# Stripes overlay the second treaty system: states of bilateral-restricted countries.
+	map_color_second = {
+		if = {
+			limit = { owner ?= { has_variable = nte_bilateral_restricted_flag } }
+			value = "nte_bilateral_restricted_crimson"
+		}
+	}
+
 	map_tooltip = {
 		if = {
 			limit = {
@@ -151,21 +159,78 @@
 			}
 			custom_tooltip_no_bullet = "nte_map_tt_escalator"
 		}
+		if = {
+			limit = { owner ?= { has_variable = nte_bilateral_restricted_flag } }
+			custom_tooltip_no_bullet = "nte_map_tt_bilateral_stripe"
+		}
 	}
 
-	scripted_button = nte_btn_propose_revision_vote
-	scripted_button = nte_btn_propose_isolation_sanction
-	scripted_button = nte_btn_propose_naval_holiday
-	scripted_button = nte_btn_toggle_mothball_fleet
-	scripted_button = nte_btn_scrap_obsolete_hulls
-	scripted_button = nte_btn_submarine_protocol
-	scripted_button = nte_btn_naval_intelligence_exchange
-	scripted_button = nte_btn_falsify_tonnage
+	# Membership decisions only; council, compliance and diplomacy buttons live on the role entries.
 	scripted_button = nte_btn_invoke_escalator_clause
 	scripted_button = nte_btn_peaceful_withdrawal
 
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_hide_default_buttons"
+		container = "custom_widget_container_buttons"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_decree_grid"
+		container = "custom_widget_container_2"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_gnl_portraits"
+		container = "custom_widget_container_je_icon"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_gnl_role_directory"
+		container = "custom_widget_container_3"
+	}
+
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_gnl_ladder"
+		container = "custom_widget_container_4"
+	}
+
 	on_monthly_pulse = {
 		effect = {
+			# Also migrates members from older saves that only have the overview entry.
+			nte_add_gnl_journal_entries = yes
+			# Treaty climate sits on this member's journal entry, so withdrawing or dissolution removes it.
+			scope:journal_entry = {
+				if = {
+					limit = {
+						has_global_variable = gnl_treaty_stability
+						global_var:gnl_treaty_stability >= 70
+					}
+					if = {
+						limit = { NOT = { has_modifier = nte_treaty_concord_modifier } }
+						add_modifier = nte_treaty_concord_modifier
+					}
+				}
+				else_if = {
+					limit = { has_modifier = nte_treaty_concord_modifier }
+					remove_modifier = nte_treaty_concord_modifier
+				}
+				if = {
+					limit = {
+						has_global_variable = gnl_treaty_stability
+						global_var:gnl_treaty_stability <= 30
+					}
+					if = {
+						limit = { NOT = { has_modifier = nte_treaty_strain_modifier } }
+						add_modifier = nte_treaty_strain_modifier
+					}
+				}
+				else_if = {
+					limit = { has_modifier = nte_treaty_strain_modifier }
+					remove_modifier = nte_treaty_strain_modifier
+				}
+			}
 			# Only the chair country drives the global monthly calculation to avoid N-times duplication in multiplayer
 			if = {
 				limit = {
@@ -221,10 +286,20 @@
 		color = "gold_positive"
 		conclusion_desc = nte_outcome_peace_desc
 		trigger = {
-			OR = {
-				NOT = { has_global_variable = gnl_formed }
-				NOT = { has_variable = gnl_participating_country }
-			}
+			NOT = { has_global_variable = gnl_formed }
+			NOT = { has_global_variable = gnl_dissolved_flag }
+			NOT = { has_variable = nte_withdrawn_from_treaty }
+		}
+	}
+
+	outcome = {
+		header = nte_outcome_withdrawn
+		effect_header = nte_outcome_withdrawn_effect_header
+		color = "blue_negative"
+		conclusion_desc = nte_outcome_withdrawn_desc
+		trigger = {
+			has_global_variable = gnl_formed
+			NOT = { has_variable = gnl_participating_country }
 		}
 	}
 
@@ -233,16 +308,27 @@
 		effect_header = nte_outcome_collapse_effect_header
 		color = "red"
 		conclusion_desc = nte_outcome_collapse_desc
+		# Also closes every copy once the treaty is gone, otherwise no outcome is valid after dissolution.
 		trigger = {
-			has_global_variable = gnl_formed
-			has_global_variable = gnl_treaty_stability
-			global_var:gnl_treaty_stability <= 0
+			OR = {
+				NOT = { has_global_variable = gnl_formed }
+				has_global_variable = gnl_dissolved_flag
+				trigger_if = {
+					limit = { has_global_variable = gnl_treaty_stability }
+					global_var:gnl_treaty_stability <= 0
+				}
+				trigger_else = { always = no }
+			}
 		}
 		effect = {
 			nte_dissolve_global_treaty = yes
 		}
 	}
 
-	weight = 200
+	# High weight puts the treaty in the main-screen goal tracker.
+	weight = 5000
+	highlight = yes
+	# The owner is added as an involved country on joining, so the involved flag is the one that pins it.
+	should_be_pinned_by_default_involved = yes
 	should_be_pinned_by_default_uninvolved_or_context = yes
 }

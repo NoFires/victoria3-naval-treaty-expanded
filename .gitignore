@@ -12,3 +12,6 @@ desktop.ini
 *.tmp
 *.bak
 *.swp
+
+# oh-my-claudecode session state
+.omc/

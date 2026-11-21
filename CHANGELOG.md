@@ -2,6 +2,27 @@
 
 # Changelog — Naval Treaty Expanded
 
+## [v0.2.0] - 2026-11-21
+
+### Added
+- **Treaty offices**: the Global Naval Limitation Treaty is now an overview entry plus three office entries (Treaty Council, Fleet Compliance, Naval Diplomacy). Decisions are grouped by office and shown as decree cards with real buttons.
+- **Overview widgets**: tier ladder of the five quota ranks, portraits of our ruler and the conference chair, a directory of the treaty's other entries (vanilla journal cards, click to open), and a pin-to-outliner button while unpinned.
+- **Invitations to accede** (`nte_global.15`): when the treaty is founded every other eligible Great Power is invited; powers that rise later get one invitation of their own. The AI weighs its attitude to the chair, navy law, strategy, fiscal pressure, war and naval superiority.
+- **Map modes**: treaty members by standing, with bilateral treaty stripes; bilateral treaty map mode.
+- **Treaty climate**: concord / strain modifiers on members while stability is high / low.
+- **Bilateral treaty**: quota progress bar, expiry event (renew, ease to 75%, or let it lapse).
+- Narrative rewrite of journal texts in both languages.
+
+### Changed
+- **Leaving only through the journal**: the treaty can no longer be withdrawn from in the diplomacy screen; use the journal button or a conference walkout.
+- **The treaty survives withdrawals**: it dissolves only when no member is left or stability reaches 0.
+- **AI members stay longer**: 5-year minimum membership for AI, escalator clause only under real pressure, much lower withdrawal weights.
+- The treaty group is themed (no longer under "Additional Journal Entries"), the overview entry is pinned by default and announced with a popup.
+
+### Fixed
+- The overview entry stayed open forever after the treaty dissolved; it now closes, and the related script errors are gone.
+- Participant list on the treaty entry, duplicate involved countries, isolation vote comparison errors, interest group loc data errors, and a crash from an unset renewal variable.
+
 ## [v0.1.1] - 2026-11-14
 
 ### Fixed

@@ -1,4 +1,24 @@
-﻿# Global Treaty Entry Into Force
+﻿# GNL journal family: the overview entry plus three role entries that carry the buttons.
+nte_add_gnl_journal_entries = {
+	if = {
+		limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
+		add_journal_entry = { type = global_naval_limitation_union }
+	}
+	if = {
+		limit = { NOT = { has_journal_entry = nte_gnl_treaty_council } }
+		add_journal_entry = { type = nte_gnl_treaty_council }
+	}
+	if = {
+		limit = { NOT = { has_journal_entry = nte_gnl_fleet_compliance } }
+		add_journal_entry = { type = nte_gnl_fleet_compliance }
+	}
+	if = {
+		limit = { NOT = { has_journal_entry = nte_gnl_naval_diplomacy } }
+		add_journal_entry = { type = nte_gnl_naval_diplomacy }
+	}
+}
+
+# Global Treaty Entry Into Force
 global_naval_limitation_on_start = {
 	if = {
 		limit = { NOT = { has_global_variable = gnl_formed } }
@@ -20,43 +40,54 @@ global_naval_limitation_on_start = {
 		}
 		set_global_variable = { name = gnl_stability_drift value = 1 }
 		set_global_variable = { name = gnl_treaty_stability value = 75 }
+		set_global_variable = gnl_invitations_pending
 		scope:article_options.first_country = {
 			debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=GNL_FORMED|first=[THIS.GetCountry.GetNameNoFormatting]"
 		}
 	}
 
-	scope:article_options.first_country = {
-		set_variable = gnl_participating_country
-		if = {
-			limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
-			add_journal_entry = { type = global_naval_limitation_union }
-		}
-		if = {
-			limit = { NOT = { has_variable = nte_joined_notified } }
-			set_variable = nte_joined_notified
-			trigger_event = { id = nte_global.1 }
-		}
+	scope:article_options.first_country = { nte_gnl_admit_member = yes }
+	scope:article_options.second_country = { nte_gnl_admit_member = yes }
+	nte_gnl_refresh_members = yes
+	if = {
+		limit = { has_global_variable = gnl_invitations_pending }
+		remove_global_variable = gnl_invitations_pending
+		nte_gnl_send_invitations = yes
 	}
-	scope:article_options.second_country = {
-		set_variable = gnl_participating_country
-		if = {
-			limit = { NOT = { has_journal_entry = global_naval_limitation_union } }
-			add_journal_entry = { type = global_naval_limitation_union }
-		}
-		if = {
-			limit = { NOT = { has_variable = nte_joined_notified } }
-			set_variable = nte_joined_notified
-			trigger_event = { id = nte_global.1 }
-		}
-	}
+}
 
+# One new member (country scope): founders and invited great powers alike.
+nte_gnl_admit_member = {
+	if = {
+		limit = { NOT = { has_variable = gnl_participating_country } }
+		set_variable = { name = nte_ai_withdrawal_lock years = 5 }
+	}
+	set_variable = gnl_participating_country
+	nte_add_gnl_journal_entries = yes
+	if = {
+		limit = { NOT = { has_variable = nte_joined_notified } }
+		set_variable = nte_joined_notified
+		trigger_event = { id = nte_global.1 popup = yes }
+	}
+}
+
+# Membership-wide bookkeeping after anyone joins.
+nte_gnl_refresh_members = {
+	# Every member is involved in every copy so the entry lists all participating countries.
 	every_country = {
 		limit = { has_variable = gnl_participating_country }
 		save_scope_as = nte_member_temp
 		every_country = {
 			limit = { has_journal_entry = global_naval_limitation_union }
 			je:global_naval_limitation_union ?= {
-				add_involved_country = scope:nte_member_temp
+				if = {
+					limit = {
+						NOT = {
+							any_scope_je_involved = { this = scope:nte_member_temp }
+						}
+					}
+					add_involved_country = scope:nte_member_temp
+				}
 			}
 		}
 	}
@@ -123,6 +154,18 @@ global_naval_limitation_on_start = {
 		}
 	}
 	nte_sync_global_stability_bars = yes
+}
+
+# Invite every eligible great power once (nte_global.15).
+nte_gnl_send_invitations = {
+	every_country = {
+		limit = {
+			nte_gnl_invitation_eligible = yes
+			NOT = { has_variable = nte_gnl_invited }
+		}
+		set_variable = nte_gnl_invited
+		trigger_event = { id = nte_global.15 days = 5 popup = yes }
+	}
 }
 
 # Global Treaty Safe Withdrawal & Chair Handover Fix
@@ -221,13 +264,20 @@ nte_global_on_withdrawal = {
 			remove_variable = nte_escalator_clause_active
 			remove_variable = nte_country_holiday_accepted
 			remove_variable = nte_submarine_protocol_active
+			remove_variable = nte_overhaul_flavor_received
+			remove_variable = nte_exposure_crisis_cooldown
+			remove_variable = overhaul_arms_race_paused_by_treaty
+			remove_variable = naval_arms_race_frozen_cd
 			nte_clear_all_global_modifiers = yes
 		}
 
 		every_country = {
 			limit = { has_journal_entry = global_naval_limitation_union }
 			je:global_naval_limitation_union ?= {
-				remove_involved_country = scope:nte_leaving_country
+				if = {
+					limit = { any_scope_je_involved = { this = scope:nte_leaving_country } }
+					remove_involved_country = scope:nte_leaving_country
+				}
 			}
 		}
 
@@ -292,7 +342,7 @@ nte_global_on_break_penalty = {
 			NOT = { scope:withdrawing_country = { has_variable = nte_withdrawn_from_treaty } }
 		}
 		scope:withdrawing_country = {
-			set_variable = { name = nte_withdrawn_from_treaty months = 2 }
+			set_variable = { name = nte_withdrawn_from_treaty months = 24 }
 			if = {
 				limit = { NOT = { has_global_variable = gnl_escalator_threat_active } }
 				change_infamy = 5
@@ -356,6 +406,7 @@ nte_dissolve_global_treaty = {
 				limit = { has_variable = gnl_participating_country }
 				trigger_event = { id = nte_global.9 }
 			}
+			remove_variable = nte_gnl_invited
 			remove_variable = gnl_participating_country
 			remove_variable = nte_joined_notified
 			remove_variable = nte_grace_months
@@ -383,6 +434,10 @@ nte_dissolve_global_treaty = {
 			remove_variable = nte_escalator_clause_active
 			remove_variable = nte_country_holiday_accepted
 			remove_variable = nte_submarine_protocol_active
+			remove_variable = nte_overhaul_flavor_received
+			remove_variable = nte_exposure_crisis_cooldown
+			remove_variable = overhaul_arms_race_paused_by_treaty
+			remove_variable = naval_arms_race_frozen_cd
 			nte_clear_all_global_modifiers = yes
 		}
 	}
@@ -411,24 +466,42 @@ nte_global_treaty_monthly_pulse = {
 		}
 		nte_update_country_tonnage_vars = yes
 
-		# Qualitative super-heavy ship check (adapts to 10-slot Naval Overhaul mod when detected)
+		# Qualitative super-heavy & Treaty Cruiser breach check (unified thresholds, excludes pocket battleships)
 		if = {
 			limit = {
 				any_scope_ship = {
-					ship_group = ship_group:ship_group_capital_ships
 					OR = {
 						AND = {
-							has_global_variable = nte_naval_overhaul_detected
+							ship_group = ship_group:ship_group_capital_ships
+							NOT = { is_ship_type = ship_type:ship_type_coastal_defense_ship }
 							OR = {
-								hit_points >= 7800
-								power_projection >= 640
+								AND = {
+									has_global_variable = nte_naval_overhaul_detected
+									OR = {
+										hit_points >= 8000
+										power_projection >= 680
+									}
+								}
+								AND = {
+									NOT = { has_global_variable = nte_naval_overhaul_detected }
+									OR = {
+										hit_points >= 6800
+										power_projection >= 595
+									}
+								}
 							}
 						}
 						AND = {
-							NOT = { has_global_variable = nte_naval_overhaul_detected }
+							ship_group = ship_group:ship_group_cruisers
+							NOR = {
+								is_ship_type = ship_type:ship_type_aircraft_carrier
+								is_ship_type = ship_type:ship_type_seaplane_tender
+								is_ship_type = ship_type:ship_type_early_troop_ship
+								is_ship_type = ship_type:ship_type_troop_ship
+							}
 							OR = {
-								hit_points >= 6800
-								power_projection >= 595
+								hit_points >= 3400
+								power_projection >= 380
 							}
 						}
 					}
@@ -454,7 +527,7 @@ nte_global_treaty_monthly_pulse = {
 			remove_variable = nte_qualitative_panic_sent
 		}
 
-		# Secret tonnage falsification exposure roll
+		# Secret tonnage falsification exposure roll (intelligence audit)
 		if = {
 			limit = { has_variable = nte_tonnage_falsification_active }
 			if = {
@@ -472,6 +545,27 @@ nte_global_treaty_monthly_pulse = {
 					chance = 12
 					remove_variable = nte_tonnage_falsification_active
 					if = { limit = { has_modifier = nte_falsification_cost_modifier } remove_modifier = nte_falsification_cost_modifier }
+					save_scope_as = nte_cheater
+					if = {
+						limit = {
+							any_country = {
+								has_variable = gnl_participating_country
+								NOT = { this = scope:nte_cheater }
+								has_modifier = nte_naval_intelligence_exchange_modifier
+							}
+						}
+						ordered_country = {
+							limit = {
+								has_variable = gnl_participating_country
+								NOT = { this = scope:nte_cheater }
+								has_modifier = nte_naval_intelligence_exchange_modifier
+							}
+							order_by = prestige
+							position = 0
+							save_scope_as = nte_discoverer
+							trigger_event = { id = nte_global.11 days = 1 }
+						}
+					}
 					trigger_event = { id = nte_global.6 }
 				}
 			}
@@ -480,6 +574,7 @@ nte_global_treaty_monthly_pulse = {
 					chance = 5
 					remove_variable = nte_tonnage_falsification_active
 					if = { limit = { has_modifier = nte_falsification_cost_modifier } remove_modifier = nte_falsification_cost_modifier }
+					save_scope_as = nte_cheater
 					trigger_event = { id = nte_global.6 }
 				}
 			}
@@ -518,6 +613,20 @@ nte_global_treaty_monthly_pulse = {
 				if = {
 					limit = { NOT = { has_modifier = nte_isolated_sanction_modifier } }
 					add_modifier = { name = global_naval_limitation_union_penalty months = 2 }
+				}
+				# AI chronic over-limit compliance relief: trigger emergency decommissioning/scrapping if stuck >= 18 months
+				if = {
+					limit = {
+						is_ai = yes
+						is_at_war = no
+						var:nte_grace_months >= 18
+						NOT = { has_variable = nte_scrapping_program_active }
+						NOT = { has_variable = nte_scrap_cooldown }
+					}
+					set_variable = { name = nte_scrapping_program_active months = 24 }
+					set_variable = { name = nte_scrap_cooldown months = 48 }
+					add_modifier = { name = nte_scrap_dividend_modifier months = 24 }
+					nte_update_country_tonnage_vars = yes
 				}
 			}
 		}
@@ -709,11 +818,11 @@ nte_global_treaty_monthly_pulse = {
 		}
 	}
 
-	# 7. Auto-dissolve if fewer than 2 living members remain or stability reached 0
+	# 7. Auto-dissolve only if no living member remains or stability reached 0; a withdrawal alone never ends the treaty
 	if = {
 		limit = {
 			OR = {
-				local_var:member_count < 2
+				local_var:member_count < 1
 				AND = {
 					has_global_variable = gnl_treaty_stability
 					global_var:gnl_treaty_stability <= 0
@@ -741,7 +850,7 @@ nte_resolve_quinquennial_conference = {
 				value = {
 					value = global_var:gnl_tonnage_base_limit
 					round = yes
-					max = 1200
+					max = nte_era_base_limit_max
 				}
 			}
 		}
@@ -804,8 +913,8 @@ nte_resolve_revision_vote = {
 						divide = 100
 					}
 				}
-				min = 80
-				max = 1200
+				min = nte_era_base_limit_min
+				max = nte_era_base_limit_max
 				round = yes
 			}
 		}

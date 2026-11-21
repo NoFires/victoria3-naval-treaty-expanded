@@ -44,3 +44,18 @@ nte_personal_quota_bar = {
 	min_value = 0
 	max_value = 120
 }
+
+# Pushed monthly by nte_bilateral_monthly_check: restricted tonnage as % of the bilateral cap.
+nte_bilateral_quota_bar = {
+	name = "nte_bilateral_quota_bar_name"
+	desc = "nte_bilateral_quota_bar_desc"
+
+	progress_texture = "gfx/interface/progressbar/progressbar_gold.dds"
+	background_texture = "gfx/interface/progressbar/progressbar_default.dds"
+	glow_texture = "gfx/interface/progressbar/progressbar_gold_glow.dds"
+	glow_line_texture = "gfx/interface/progressbar/progressbar_gold_glow_line.dds"
+
+	start_value = 0
+	min_value = 0
+	max_value = 120
+}

@@ -5,4 +5,6 @@ colors = {
 	nte_grace_orange = hsv { 0.08 0.85 0.95 }
 	nte_sanctioned_red = hsv { 0.00 0.85 0.85 }
 	nte_escalator_purple = hsv { 0.78 0.65 0.80 }
+	nte_bilateral_restricted_crimson = hsv { 0.95 0.75 0.70 }
+	nte_bilateral_enforcer_bronze = hsv { 0.09 0.60 0.60 }
 }

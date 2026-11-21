@@ -23,6 +23,14 @@
 				round = yes
 			}
 		}
+		set_variable = {
+			name = nte_bilateral_months_active
+			value = 0
+		}
+		if = {
+			limit = { NOT = { has_journal_entry = je_nte_bilateral_treaty } }
+			add_journal_entry = { type = je_nte_bilateral_treaty }
+		}
 		add_modifier = { name = nte_bilateral_capital_slowdown months = 2 }
 		save_scope_as = nte_bilateral_target
 		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=BILATERAL_STARTED|restricted=[THIS.GetCountry.GetNameNoFormatting]|enforcer=[THIS.GetCountry.MakeScope.Var('nte_bilateral_enforcer').GetCountry.GetNameNoFormatting]"
@@ -34,6 +42,10 @@
 
 nte_bilateral_on_end_clean = {
 	if = {
+		limit = { exists = var:nte_bilateral_renewal_target }
+		var:nte_bilateral_renewal_target = { save_scope_as = nte_bilateral_clean_target }
+	}
+	else_if = {
 		limit = { exists = scope:article.source_country }
 		scope:article.source_country = { save_scope_as = nte_bilateral_clean_target }
 	}
@@ -42,6 +54,18 @@ nte_bilateral_on_end_clean = {
 		scope:article_options.source_country = { save_scope_as = nte_bilateral_clean_target }
 	}
 	scope:nte_bilateral_clean_target ?= {
+		# Cancel a pending renewal prompt that belongs to this treaty, never another treaty of the same enforcer
+		if = {
+			limit = {
+				exists = var:nte_bilateral_enforcer
+				var:nte_bilateral_enforcer = { is_country_alive = yes }
+				var:nte_bilateral_enforcer = {
+					has_variable = nte_bilateral_renewal_target
+					var:nte_bilateral_renewal_target ?= scope:nte_bilateral_clean_target
+				}
+			}
+			var:nte_bilateral_enforcer = { remove_variable = nte_bilateral_renewal_target }
+		}
 		remove_variable = nte_bilateral_restricted_flag
 		remove_variable = nte_bilateral_enforcer
 		remove_variable = nte_bilateral_ratio_pct
@@ -51,7 +75,27 @@ nte_bilateral_on_end_clean = {
 		remove_variable = nte_bilateral_crisis_triggered
 		remove_variable = nte_bilateral_cap
 		remove_variable = nte_bilateral_tonnage
+		remove_variable = nte_bilateral_months_active
+		remove_variable = nte_bilateral_renegotiation_cd
+		remove_variable = nte_bilateral_lapsed_flag
+		if = { limit = { has_variable = overhaul_arms_race_paused_by_treaty } remove_variable = overhaul_arms_race_paused_by_treaty }
 		nte_clear_all_bilateral_modifiers = yes
+	}
+}
+
+# Renewal resets the ten-year term and any leftover compliance state from the expired term.
+nte_bilateral_on_renewal = {
+	if = {
+		limit = { exists = var:nte_bilateral_renewal_target }
+		var:nte_bilateral_renewal_target = {
+			set_variable = { name = nte_bilateral_months_active value = 0 }
+			remove_variable = nte_bilateral_renegotiation_cd
+			remove_variable = nte_bilateral_near_limit_flag
+			remove_variable = nte_bilateral_over_limit_flag
+			remove_variable = nte_bilateral_grace_months
+			remove_variable = nte_bilateral_crisis_triggered
+			nte_clear_all_bilateral_modifiers = yes
+		}
 	}
 }
 
@@ -78,6 +122,17 @@ nte_bilateral_monthly_check = {
 					}
 				}
 			}
+			if = {
+				limit = {
+					exists = var:nte_bilateral_enforcer
+					var:nte_bilateral_enforcer = { is_country_alive = yes }
+					var:nte_bilateral_enforcer = {
+						has_variable = nte_bilateral_renewal_target
+						var:nte_bilateral_renewal_target ?= scope:nte_restricted_country_check
+					}
+				}
+				var:nte_bilateral_enforcer = { remove_variable = nte_bilateral_renewal_target }
+			}
 			remove_variable = nte_bilateral_restricted_flag
 			remove_variable = nte_bilateral_enforcer
 			remove_variable = nte_bilateral_ratio_pct
@@ -87,6 +142,8 @@ nte_bilateral_monthly_check = {
 			remove_variable = nte_bilateral_crisis_triggered
 			remove_variable = nte_bilateral_cap
 			remove_variable = nte_bilateral_tonnage
+			remove_variable = nte_bilateral_months_active
+			remove_variable = nte_bilateral_renegotiation_cd
 			nte_clear_all_bilateral_modifiers = yes
 		}
 		else = {
@@ -117,6 +174,29 @@ nte_bilateral_monthly_check = {
 			}
 			set_variable = { name = nte_bilateral_tonnage value = local_var:my_tonnage }
 			set_variable = { name = nte_bilateral_cap value = local_var:bilateral_cap }
+			if = {
+				limit = { NOT = { has_journal_entry = je_nte_bilateral_treaty } }
+				add_journal_entry = { type = je_nte_bilateral_treaty }
+			}
+			je:je_nte_bilateral_treaty ?= {
+				set_bar_progress = {
+					name = nte_bilateral_quota_bar
+					value = {
+						value = prev.var:nte_bilateral_tonnage
+						divide = prev.var:nte_bilateral_cap
+						multiply = 100
+						min = 0
+						max = 120
+					}
+				}
+			}
+			if = {
+				limit = { NOT = { has_variable = nte_bilateral_months_active } }
+				set_variable = { name = nte_bilateral_months_active value = 1 }
+			}
+			else = {
+				change_variable = { name = nte_bilateral_months_active add = 1 }
+			}
 			if = {
 				limit = { local_var:my_tonnage > local_var:bilateral_cap }
 				set_variable = nte_bilateral_over_limit_flag
@@ -178,6 +258,39 @@ nte_bilateral_monthly_check = {
 				remove_variable = nte_bilateral_over_limit_flag
 				remove_variable = nte_bilateral_grace_months
 				nte_clear_all_bilateral_modifiers = yes
+			}
+			# Self-heal a stale renewal prompt whose counterpart no longer exists, so it cannot block future prompts
+			if = {
+				limit = {
+					var:nte_bilateral_enforcer = { has_variable = nte_bilateral_renewal_target }
+					var:nte_bilateral_enforcer = { NOT = { exists = var:nte_bilateral_renewal_target } }
+				}
+				var:nte_bilateral_enforcer = { remove_variable = nte_bilateral_renewal_target }
+			}
+			# 10-year peaceful compliance expiration / renewal prompt, decided by the enforcer
+			if = {
+				limit = {
+					has_variable = nte_bilateral_months_active
+					var:nte_bilateral_months_active >= 120
+					NOT = { has_variable = nte_bilateral_over_limit_flag }
+					NOT = { has_variable = nte_bilateral_renegotiation_cd }
+				}
+				if = {
+					limit = {
+						var:nte_bilateral_enforcer = {
+							NOT = { has_variable = nte_bilateral_renewal_target }
+						}
+					}
+					save_scope_as = nte_bilateral_target
+					var:nte_bilateral_enforcer = {
+						set_variable = {
+							name = nte_bilateral_renewal_target
+							value = scope:nte_bilateral_target
+						}
+						trigger_event = { id = nte_bilateral.21 days = 3 }
+					}
+					set_variable = { name = nte_bilateral_renegotiation_cd months = 24 }
+				}
 			}
 		}
 	}

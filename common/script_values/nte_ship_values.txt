@@ -1,10 +1,34 @@
 ﻿# Naval Treaty Expanded - 1.15 Real Tonnage (Ship Era + Hit Points Complexity) & Voting Weights
 
 # Single ship tonnage value evaluated in `ship` scope
-# Capital ships count full tonnage (10-55 base + up to +45 mods); Combat Cruisers are scaled ~35% (3-22 base + up to +14 mods); Troop Transports, Destroyers/Submarines & Supply Ships count 0
+# Capital ships count full tonnage (10-55 base + uncapped 10-slot mods); Coastal Defense / Pocket Battleships have a dedicated light-capital tier; Combat Cruisers are scaled ~35% with 10,000t Treaty Cruiser surcharge; Troop Transports, Destroyers/Submarines & Supply Ships count 0
 nte_single_ship_effective_tonnage = {
 	value = 0
 	if = {
+		limit = { is_ship_type = ship_type:ship_type_coastal_defense_ship }
+		add = 14
+		if = {
+			limit = { power_projection > 130 }
+			add = {
+				value = power_projection
+				subtract = 130
+				divide = 30
+				min = 0
+				max = 10
+			}
+		}
+		if = {
+			limit = { hit_points > 1400 }
+			add = {
+				value = hit_points
+				subtract = 1400
+				divide = 300
+				min = 0
+				max = 8
+			}
+		}
+	}
+	else_if = {
 		limit = { ship_group = ship_group:ship_group_capital_ships }
 		if = {
 			limit = { is_ship_type = ship_type:ship_type_monitor }
@@ -13,10 +37,6 @@ nte_single_ship_effective_tonnage = {
 		else_if = {
 			limit = { is_ship_type = ship_type:ship_type_ship_of_the_line }
 			add = 12
-		}
-		else_if = {
-			limit = { is_ship_type = ship_type:ship_type_coastal_defense_ship }
-			add = 14
 		}
 		else_if = {
 			limit = { is_ship_type = ship_type:ship_type_early_ironclad }
@@ -41,26 +61,26 @@ nte_single_ship_effective_tonnage = {
 		else = {
 			add = 20
 		}
-		# Firepower / propulsion / doctrine complexity via power_projection (captures guns & offensive mods)
+		# Firepower / propulsion / doctrine complexity via power_projection (calibrated for 10-slot upgrades)
 		if = {
 			limit = { power_projection > 150 }
 			add = {
 				value = power_projection
 				subtract = 150
-				divide = 25
+				divide = 22
 				min = 0
-				max = 25
+				max = 55
 			}
 		}
-		# Armor / hull durability premium via hit_points (1.15 capital ships start at 1600-4800+ HP)
+		# Armor / hull durability premium via hit_points (calibrated for 10-slot upgrades)
 		if = {
 			limit = { hit_points > 2000 }
 			add = {
 				value = hit_points
 				subtract = 2000
-				divide = 250
+				divide = 220
 				min = 0
-				max = 20
+				max = 50
 			}
 		}
 	}
@@ -108,9 +128,9 @@ nte_single_ship_effective_tonnage = {
 			add = {
 				value = power_projection
 				subtract = 120
-				divide = 30
+				divide = 25
 				min = 0
-				max = 8
+				max = 22
 			}
 		}
 		if = {
@@ -118,13 +138,26 @@ nte_single_ship_effective_tonnage = {
 			add = {
 				value = hit_points
 				subtract = 1200
-				divide = 250
+				divide = 220
 				min = 0
-				max = 6
+				max = 18
 			}
 		}
-		# Jeune Ecole doctrine prioritizes light cruisers/raiders: -28% treaty tonnage footprint on cruisers
+		# 10,000t Treaty Cruiser qualitative surcharge: super-cruisers lose Jeune Ecole discount and pay capital-grade penalty
 		if = {
+			limit = {
+				NOR = {
+					is_ship_type = ship_type:ship_type_aircraft_carrier
+					is_ship_type = ship_type:ship_type_seaplane_tender
+				}
+				OR = {
+					hit_points >= 3400
+					power_projection >= 380
+				}
+			}
+			add = 8
+		}
+		else_if = {
 			limit = {
 				owner ?= { has_law_or_variant = law_type:law_jeune_ecole }
 			}
@@ -152,13 +185,54 @@ nte_tonnage_reduction_factor = {
 	}
 	if = {
 		limit = { has_variable = nte_scrapping_program_active }
-		subtract = 0.10
+		subtract = 0.12
 	}
 	if = {
 		limit = { has_variable = nte_tonnage_falsification_active }
 		subtract = 0.12
 	}
-	min = 0.72
+	min = 0.62
+}
+
+# Era-scaled baseline tonnage bounds (evaluated in Chair / Rank 1 country scope)
+nte_era_base_limit_min = {
+	value = 160
+	if = {
+		limit = { has_technology_researched = ironclad_tech }
+		add = 40
+	}
+	if = {
+		limit = { has_technology_researched = pre_dreadnought_tech }
+		add = 60
+	}
+	if = {
+		limit = { has_technology_researched = dreadnought_tech }
+		add = 100
+	}
+	if = {
+		limit = { has_technology_researched = carrier_tech }
+		add = 120
+	}
+}
+
+nte_era_base_limit_max = {
+	value = 900
+	if = {
+		limit = { has_technology_researched = ironclad_tech }
+		add = 400
+	}
+	if = {
+		limit = { has_technology_researched = pre_dreadnought_tech }
+		add = 500
+	}
+	if = {
+		limit = { has_technology_researched = dreadnought_tech }
+		add = 700
+	}
+	if = {
+		limit = { has_technology_researched = carrier_tech }
+		add = 700
+	}
 }
 
 # Mixed voting weight: Base seat vote (20) + 0.5 * Effective Tonnage (min 20, max 250)

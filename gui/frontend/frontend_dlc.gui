@@ -1,4 +1,5 @@
-﻿types dlc_types {
+﻿# Must override vanilla gui/frontend/frontend_dlc.gui directly: file only defines types dlc_types, and redeclaring dlc_collection/dlc_button elsewhere causes duplicate GUI type errors.
+types dlc_types {
 	type dlc_collection = flowcontainer {
 		margin_left = 20
 		spacing = 16

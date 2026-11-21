@@ -64,12 +64,14 @@ nte_bilateral.2 = {
 		if = {
 			limit = { has_variable = nte_bilateral_restricted_flag }
 			set_variable = { name = nte_bilateral_grace_months value = 0 }
+			set_variable = { name = nte_bilateral_crisis_triggered months = 36 }
 		}
 		if = {
 			limit = { has_variable = nte_bilateral_formally_broken_flag }
 			remove_variable = nte_bilateral_formally_broken_flag
+			add_modifier = { name = nte_bilateral_capital_slowdown years = 3 }
 		}
-		if = {
+		else_if = {
 			limit = { NOT = { has_modifier = nte_bilateral_breach_penalty } }
 			add_modifier = { name = nte_bilateral_capital_slowdown years = 3 }
 		}
@@ -349,6 +351,145 @@ nte_bilateral.20 = {
 				add = 20
 			}
 		}
+	}
+}
+
+# 21: Bilateral Naval Treaty 10-Year Expiration & Renegotiation
+nte_bilateral.21 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.21.t
+	desc = nte_bilateral.21.d
+	flavor = nte_bilateral.21.f
+
+	event_image = {
+		video = "africa_diplomats_negotiating"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	trigger = {
+		has_variable = nte_bilateral_renewal_target
+		exists = var:nte_bilateral_renewal_target
+		var:nte_bilateral_renewal_target = {
+			is_country_alive = yes
+			has_variable = nte_bilateral_restricted_flag
+		}
+	}
+
+	option = {
+		name = nte_bilateral.21.a # Renew the bilateral limitation for another decade
+		default_option = yes
+		if = {
+			limit = { exists = var:nte_bilateral_renewal_target }
+			change_relations = { country = var:nte_bilateral_renewal_target value = 10 }
+			add_modifier = { name = nte_bilateral_pressure_cost_modifier months = 12 }
+			nte_bilateral_on_renewal = yes
+		}
+		remove_variable = nte_bilateral_renewal_target
+		ai_chance = {
+			base = 45
+		}
+	}
+
+	option = {
+		name = nte_bilateral.21.b # Ease the ratio to 75% as a goodwill gesture
+		trigger = { exists = var:nte_bilateral_renewal_target }
+		change_relations = { country = var:nte_bilateral_renewal_target value = 20 }
+		var:nte_bilateral_renewal_target = {
+			set_variable = { name = nte_bilateral_ratio_pct value = 75 }
+			set_variable = {
+				name = nte_bilateral_cap
+				value = {
+					value = root.nte_country_effective_tonnage
+					multiply = 75
+					divide = 100
+					min = 20
+					round = yes
+				}
+			}
+		}
+		nte_bilateral_on_renewal = yes
+		remove_variable = nte_bilateral_renewal_target
+		ai_chance = {
+			base = 30
+			modifier = {
+				trigger = {
+					exists = var:nte_bilateral_renewal_target
+					"relations(scope:nte_bilateral_target)" >= 10
+				}
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = nte_bilateral.21.c # Allow the bilateral treaty to lapse peacefully
+		add_modifier = { name = nte_prestige_gain_modifier years = 2 }
+		if = {
+			limit = { exists = var:nte_bilateral_renewal_target }
+			change_relations = { country = var:nte_bilateral_renewal_target value = 25 }
+		}
+		if = { limit = { has_modifier = nte_bilateral_pressure_cost_modifier } remove_modifier = nte_bilateral_pressure_cost_modifier }
+		# 1.15.1 has no scripted treaty-termination effect: fail requirement_to_maintain instead,
+		# so the engine breaks the article on its next update and on_break runs the cleanup.
+		if = {
+			limit = { exists = var:nte_bilateral_renewal_target }
+			var:nte_bilateral_renewal_target = { set_variable = nte_bilateral_lapsed_flag }
+		}
+		remove_variable = nte_bilateral_renewal_target
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					exists = var:nte_bilateral_renewal_target
+					"relations(scope:nte_bilateral_target)" >= 30
+				}
+				add = 30
+			}
+		}
+	}
+}
+
+# 22: Naval Attache Inspection Friction (Bilateral Flavor)
+nte_bilateral.22 = {
+	type = country_event
+	placement = root
+	title = nte_bilateral.22.t
+	desc = nte_bilateral.22.d
+	flavor = nte_bilateral.22.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	duration = 2
+
+	option = {
+		name = nte_bilateral.22.a # Grant full dockyard ledger access
+		default_option = yes
+		add_modifier = { name = nte_bilateral_attache_friction months = 12 }
+		if = {
+			limit = { has_variable = nte_bilateral_enforcer }
+			change_relations = { country = var:nte_bilateral_enforcer value = 10 }
+		}
+		ai_chance = { base = 65 }
+	}
+
+	option = {
+		name = nte_bilateral.22.b # Restrict attaches to ceremonial visits
+		if = {
+			limit = { has_variable = nte_bilateral_enforcer }
+			change_relations = { country = var:nte_bilateral_enforcer value = -10 }
+		}
+		ig:ig_armed_forces ?= {
+			add_modifier = { name = nte_ig_navy_expansion_happy years = 1 }
+		}
+		ai_chance = { base = 35 }
 	}
 }
 
