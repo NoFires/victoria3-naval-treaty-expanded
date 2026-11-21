@@ -1,0 +1,87 @@
+﻿je_nte_bilateral_treaty = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	group = global_naval_limitation_union_group
+
+	activation_description = {
+		custom_tooltip = {
+			text = je_nte_bilateral_treaty_activation_tt
+			always = no
+		}
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = nte_bilateral_je_status_over
+				trigger = {
+					has_variable = nte_bilateral_over_limit_flag
+				}
+			}
+			triggered_desc = {
+				desc = nte_bilateral_je_status_near
+				trigger = {
+					has_variable = nte_bilateral_near_limit_flag
+				}
+			}
+			triggered_desc = {
+				desc = nte_bilateral_je_status_compliant
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	scripted_progress_bar = nte_bilateral_quota_bar
+
+	# Map mode: who is restricted and who enforces; stripes warn of a looming breach.
+	map_color = {
+		if = {
+			limit = { owner ?= { has_variable = nte_bilateral_over_limit_flag } }
+			value = "nte_sanctioned_red"
+		}
+		else_if = {
+			limit = { owner ?= { has_variable = nte_bilateral_restricted_flag } }
+			value = "nte_bilateral_restricted_crimson"
+		}
+		else_if = {
+			limit = { owner ?= { nte_map_is_bilateral_enforcer = yes } }
+			value = "nte_bilateral_enforcer_bronze"
+		}
+	}
+
+	map_color_second = {
+		if = {
+			limit = { owner ?= { has_variable = nte_bilateral_near_limit_flag } }
+			value = "nte_grace_orange"
+		}
+	}
+
+	map_tooltip = {
+		if = {
+			limit = { owner ?= { has_variable = nte_bilateral_over_limit_flag } }
+			custom_tooltip_no_bullet = "nte_bil_map_tt_over"
+		}
+		else_if = {
+			limit = { owner ?= { has_variable = nte_bilateral_restricted_flag } }
+			custom_tooltip_no_bullet = "nte_bil_map_tt_restricted"
+		}
+		else_if = {
+			limit = { owner ?= { nte_map_is_bilateral_enforcer = yes } }
+			custom_tooltip_no_bullet = "nte_bil_map_tt_enforcer"
+		}
+	}
+
+	outcome = {
+		header = je_nte_bilateral_treaty_lifted_header
+		effect_header = je_nte_bilateral_treaty_lifted_effect_header
+		color = "gold_positive"
+		conclusion_desc = je_nte_bilateral_treaty_lifted_desc
+		trigger = {
+			NOT = { has_variable = nte_bilateral_restricted_flag }
+		}
+	}
+
+	weight = 150
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}

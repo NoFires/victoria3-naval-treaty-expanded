@@ -1,0 +1,10 @@
+﻿# Naval Treaty Expanded - journal map-mode helpers shared by map_color and map_tooltip (country scope)
+
+# shortcut: scans every country per state while the map mode renders; add an enforcer flag variable if it lags.
+nte_map_is_bilateral_enforcer = {
+	any_country = {
+		has_variable = nte_bilateral_restricted_flag
+		exists = var:nte_bilateral_enforcer
+		var:nte_bilateral_enforcer = prev
+	}
+}

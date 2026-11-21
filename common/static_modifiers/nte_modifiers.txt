@@ -177,3 +177,29 @@ nte_ig_navy_expansion_happy = {
 	icon = "gfx/interface/icons/timed_modifier_icons/modifier_statue_positive.dds"
 	interest_group_approval_add = 5
 }
+
+nte_dockyard_conversion_subsidy = {
+	icon = "gfx/interface/icons/timed_modifier_icons/modifier_gear_positive.dds"
+	state_trade_capacity_mult = 0.05
+	building_trade_center_throughput_add = 0.05
+	country_navy_goods_cost_mult = 0.05
+}
+
+nte_bilateral_attache_friction = {
+	icon = "gfx/interface/icons/timed_modifier_icons/modifier_documents_negative.dds"
+	country_influence_add = -15
+	country_diplomatic_reputation_add = -1
+}
+
+# Treaty climate: held on each member's GNL journal entry, so it disappears with the entry.
+nte_treaty_concord_modifier = {
+	icon = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	country_influence_mult = 0.05
+	country_navy_goods_cost_mult = -0.03
+}
+
+nte_treaty_strain_modifier = {
+	icon = "gfx/interface/icons/timed_modifier_icons/modifier_flag_negative.dds"
+	country_influence_mult = -0.05
+	country_infamy_decay_mult = -0.05
+}

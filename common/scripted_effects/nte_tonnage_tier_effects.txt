@@ -81,8 +81,8 @@ nte_assign_locked_tiers = {
 					value = {
 						value = var:nte_current_tonnage
 						divide = 1.67
-						min = 120
-						max = 1200
+						min = nte_era_base_limit_min
+						max = nte_era_base_limit_max
 						round = yes
 					}
 				}
@@ -105,8 +105,8 @@ nte_assign_locked_tiers = {
 					value = {
 						value = var:nte_current_tonnage
 						divide = 1.67
-						min = 120
-						max = 1200
+						min = nte_era_base_limit_min
+						max = nte_era_base_limit_max
 						round = yes
 					}
 				}

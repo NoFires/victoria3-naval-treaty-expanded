@@ -17,6 +17,7 @@ nte_clear_all_bilateral_modifiers = {
 	if = { limit = { has_modifier = nte_bilateral_capital_slowdown } remove_modifier = nte_bilateral_capital_slowdown }
 	if = { limit = { has_modifier = nte_bilateral_breach_penalty } remove_modifier = nte_bilateral_breach_penalty }
 	if = { limit = { has_modifier = nte_bilateral_pressure_cost_modifier } remove_modifier = nte_bilateral_pressure_cost_modifier }
+	if = { limit = { has_modifier = nte_bilateral_attache_friction } remove_modifier = nte_bilateral_attache_friction }
 }
 
 # Single Source of Truth for Global Treaty Stability (0..100)

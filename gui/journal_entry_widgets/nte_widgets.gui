@@ -1,0 +1,339 @@
+﻿# Naval Treaty Expanded - journal entry widgets (own file; overrides no vanilla gui)
+@nte_ladder_width = 504
+
+types nte_ladder_widget_types
+{
+	type nte_ladder_header = widget {
+		size = { @nte_ladder_width 24 }
+
+		textbox = {
+			size = { 100% 100% }
+			align = nobaseline
+			fontsize = 16
+			default_format = "#title"
+			block "header_text" {}
+		}
+	}
+
+	type nte_ladder_row = widget {
+		size = { @nte_ladder_width 28 }
+
+		background = {
+			using = dark_area
+			alpha = 0.25
+		}
+
+		# Gold tint marks the seat held by the country viewing this journal entry.
+		background = {
+			block "self_visible" {}
+			texture = "gfx/interface/backgrounds/white.dds"
+			color = { 0.85 0.72 0.35 1.0 }
+			alpha = 0.18
+		}
+
+		widget = {
+			block "flag_visible" {}
+			size = { 27 18 }
+			position = { 6 0 }
+			parentanchor = vcenter
+
+			tiny_flag = {
+				block "flag_datacontext" {}
+			}
+		}
+
+		textbox = {
+			autoresize = yes
+			align = nobaseline
+			margin_left = 42
+			parentanchor = vcenter
+			fontsize = 15
+			block "row_text" {}
+		}
+	}
+	# Decree card (pattern of vanilla tsarpoints_decree_button, own type so other mods' gui overrides cannot break it).
+	type nte_decree_card = widget {
+		size = { 248 96 }
+		alpha = "[TransparentIfFalse(ScriptedButton.IsPossible)]"
+		tooltip = "nte_decree_card_tt"
+
+		background = {
+			using = entry_bg_fancy_dark
+		}
+		background = {
+			visible = "[ScriptedButton.HasIcon]"
+			alpha = 0.2
+			using = top_illu_properties
+			texture = "[ScriptedButton.GetIcon]"
+		}
+
+		textbox = {
+			position = { 10 8 }
+			autoresize = yes
+			align = nobaseline
+			fontsize = 16
+			elide = right
+			maximumsize = { 228 -1 }
+			raw_text = "#b [ScriptedButton.GetName]#!"
+		}
+
+		# A real action button, as in vanilla tsarpoints_decree_button.
+		button = {
+			size = { 218 31 }
+			position = { 0 -10 }
+			parentanchor = bottom|hcenter
+			using = default_button_action
+			enabled = "[IsValid( ScriptedButton.ExecuteEffect )]"
+			onclick = "[Execute( ScriptedButton.ExecuteEffect )]"
+			tooltip = "nte_decree_card_tt"
+
+			textbox = {
+				parentanchor = center
+				autoresize = yes
+				align = nobaseline
+				fontsize = 15
+				text = "nte_decree_enact"
+			}
+		}
+	}
+}
+
+### WIDGETS
+flowcontainer = {
+	name = "widget_nte_gnl_ladder"
+	direction = vertical
+	parentanchor = hcenter
+	visible = "[JournalEntry.GetCountry.IsValid]"
+	spacing = 2
+	margin = { 0 5 }
+
+	divider_clean = {}
+
+	nte_ladder_header = {
+		blockoverride "header_text" {
+			text = "nte_ladder_header"
+		}
+	}
+
+	nte_ladder_row = {
+		blockoverride "self_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_self_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)1' ) ).End )]"
+		}
+		blockoverride "flag_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_filled_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)1' ) ).End )]"
+		}
+		blockoverride "flag_datacontext" {
+			datacontext = "[GetGlobalVariable('gnl_rank1_country').GetCountry]"
+		}
+		blockoverride "row_text" {
+			text = "[JournalEntry.GetCountry.GetCustom('nte_rank1_line')]"
+		}
+	}
+
+	nte_ladder_row = {
+		blockoverride "self_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_self_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)2' ) ).End )]"
+		}
+		blockoverride "flag_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_filled_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)2' ) ).End )]"
+		}
+		blockoverride "flag_datacontext" {
+			datacontext = "[GetGlobalVariable('gnl_rank2_country').GetCountry]"
+		}
+		blockoverride "row_text" {
+			text = "[JournalEntry.GetCountry.GetCustom('nte_rank2_line')]"
+		}
+	}
+
+	nte_ladder_row = {
+		blockoverride "self_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_self_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)3' ) ).End )]"
+		}
+		blockoverride "flag_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_filled_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)3' ) ).End )]"
+		}
+		blockoverride "flag_datacontext" {
+			datacontext = "[GetGlobalVariable('gnl_rank3_country').GetCountry]"
+		}
+		blockoverride "row_text" {
+			text = "[JournalEntry.GetCountry.GetCustom('nte_rank3_line')]"
+		}
+	}
+
+	nte_ladder_row = {
+		blockoverride "self_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_self_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)4' ) ).End )]"
+		}
+		blockoverride "flag_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_filled_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)4' ) ).End )]"
+		}
+		blockoverride "flag_datacontext" {
+			datacontext = "[GetGlobalVariable('gnl_rank4_country').GetCountry]"
+		}
+		blockoverride "row_text" {
+			text = "[JournalEntry.GetCountry.GetCustom('nte_rank4_line')]"
+		}
+	}
+
+	nte_ladder_row = {
+		blockoverride "self_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_self_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)5' ) ).End )]"
+		}
+		blockoverride "flag_visible" {
+			visible = "[GetScriptedGui('nte_gnl_rank_filled_sgui').IsValid( GuiScope.SetRoot( JournalEntry.GetCountry.MakeScope ).AddScope( 'rank', MakeScopeValue( '(CFixedPoint)5' ) ).End )]"
+		}
+		blockoverride "flag_datacontext" {
+			datacontext = "[GetGlobalVariable('gnl_rank5_country').GetCountry]"
+		}
+		blockoverride "row_text" {
+			text = "[JournalEntry.GetCountry.GetCustom('nte_rank5_line')]"
+		}
+	}
+}
+
+# Hides the default button list; buttons are drawn as decree cards instead (vanilla tsarpoints trick).
+widget = {
+	name = "widget_nte_hide_default_buttons"
+	size = { 0 0 }
+}
+
+# Decree grid: this journal entry's own scripted buttons as two-column cards.
+flowcontainer = {
+	name = "widget_nte_decree_grid"
+	direction = vertical
+	parentanchor = hcenter
+	spacing = 4
+	margin = { 0 4 }
+	visible = "[GreaterThan_int32(GetDataModelSize(JournalEntry.GetScriptedButtons), '(int32)0')]"
+
+	nte_ladder_header = {
+		blockoverride "header_text" {
+			text = "nte_decree_header"
+		}
+	}
+
+	dynamicgridbox = {
+		datamodel = "[JournalEntry.GetScriptedButtons]"
+		datamodel_wrap = 2
+		flipdirection = yes
+
+		item = {
+			nte_decree_card = {
+				visible = "[ScriptedButton.IsVisible]"
+			}
+		}
+	}
+}
+
+# Portraits in the icon slot: our head of state and the conference chair's.
+widget = {
+	name = "widget_nte_gnl_portraits"
+	size = { 510 230 }
+
+	background = {
+		margin = { 25 0 }
+		alpha = 0.3
+		using = top_illu_properties
+		texture = "gfx/interface/illustrations/journal/je_group_illu_international_situations.dds"
+	}
+
+	widget = {
+		size = { 160 222 }
+		position = { 55 4 }
+
+		character_portrait_medium_torso = {
+			parentanchor = top|hcenter
+			datacontext = "[JournalEntry.GetCountry.GetRuler]"
+			visible = "[Character.IsValid]"
+		}
+		textbox = {
+			parentanchor = bottom|hcenter
+			autoresize = yes
+			align = center|nobaseline
+			fontsize = 14
+			text = "nte_portrait_caption_own"
+		}
+	}
+
+	widget = {
+		size = { 160 222 }
+		position = { 295 4 }
+
+		character_portrait_medium_torso = {
+			parentanchor = top|hcenter
+			datacontext = "[GetGlobalVariable('global_gnl_chair_country').GetCountry.GetRuler]"
+			visible = "[Character.IsValid]"
+		}
+		textbox = {
+			parentanchor = bottom|hcenter
+			autoresize = yes
+			align = center|nobaseline
+			fontsize = 14
+			text = "nte_portrait_caption_chair"
+		}
+	}
+}
+
+# Directory of the treaty's other journal entries (offices, bilateral treaty).
+flowcontainer = {
+	name = "widget_nte_gnl_role_directory"
+	direction = vertical
+	parentanchor = hcenter
+	visible = "[JournalEntry.GetCountry.IsValid]"
+	spacing = 2
+	margin = { 0 5 }
+
+	nte_ladder_header = {
+		blockoverride "header_text" {
+			text = "nte_role_directory_header"
+		}
+	}
+	# Shown only while unpinned: pinning is local UI state, so this is multiplayer safe.
+	button = {
+		using = default_button_action
+		size = { @nte_ladder_width 32 }
+		parentanchor = hcenter
+		visible = "[Not(JournalEntry.IsPinnedInOutliner)]"
+		onclick = "[JournalEntry.TogglePinInOutliner]"
+		tooltip = "PIN_JOURNAL_ENTRY"
+		icon = {
+			size = { 24 24 }
+			position = { 8 0 }
+			parentanchor = vcenter
+			texture = "gfx/interface/outliner/unpinned_icon.dds"
+		}
+		textbox = {
+			parentanchor = center
+			autoresize = yes
+			align = nobaseline
+			fontsize = 15
+			text = "nte_pin_to_outliner"
+		}
+	}
+	# Same pattern as vanilla Emperor and Autocrat (tsarpoints_widgets.gui): the group's other active entries
+	# as vanilla journal cards (click opens, pin button included). AccessPlayer is display-only here.
+	flowcontainer = {
+		direction = vertical
+		parentanchor = hcenter
+		spacing = 4
+		ignoreinvisible = yes
+		datamodel = "[AccessPlayer.GetGroupsForActiveJournalEntries]"
+
+		item = {
+			flowcontainer = {
+				visible = "[ObjectsEqual(JournalEntryGroup.Self, GetJournalEntryGroup('global_naval_limitation_union_group').Self)]"
+				direction = vertical
+				spacing = 4
+				ignoreinvisible = yes
+				datamodel = "[JournalEntryGroup.GetActiveJournalEntryTypes(GetPlayer.Self)]"
+
+				item = {
+					journal_entry = {
+						visible = "[Not(ObjectsEqual(JournalEntryType.Self, JournalEntryPanel.GetJournalEntryType.Self))]"
+						datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
+					}
+				}
+			}
+		}
+	}
+}

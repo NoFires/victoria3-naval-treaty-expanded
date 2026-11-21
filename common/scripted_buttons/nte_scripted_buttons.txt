@@ -118,7 +118,7 @@ nte_btn_propose_isolation_sanction = {
 		every_country = {
 			limit = {
 				has_variable = gnl_participating_country
-				NOT = { this = global_var:gnl_isolation_target }
+				NOT = { global_var:gnl_isolation_target ?= this }
 			}
 			remove_variable = nte_iso_voted_yes
 			remove_variable = nte_iso_voted_flag
@@ -173,12 +173,15 @@ nte_btn_invoke_escalator_clause = {
 	effect = {
 		add_modifier = { name = nte_escalator_clause_modifier years = 3 }
 		set_variable = { name = nte_escalator_clause_active years = 3 }
+		if = { limit = { has_variable = overhaul_arms_race_paused_by_treaty } remove_variable = overhaul_arms_race_paused_by_treaty }
+		if = { limit = { has_variable = naval_arms_race_frozen_cd } remove_variable = naval_arms_race_frozen_cd }
 		nte_update_country_tonnage_vars = yes
 		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=ESCALATOR_INVOKED|country=[THIS.GetCountry.GetNameNoFormatting]"
 	}
 
+	# The threat is active almost permanently (any big non-member qualifies), so the AI only invokes under real pressure.
 	ai_chance = {
-		value = 15
+		value = 0
 		if = {
 			limit = {
 				OR = {
@@ -187,7 +190,7 @@ nte_btn_invoke_escalator_clause = {
 					is_at_war = yes
 				}
 			}
-			add = 35
+			add = 20
 		}
 	}
 }
@@ -215,16 +218,19 @@ nte_btn_peaceful_withdrawal = {
 			add_modifier = { name = nte_withdrawal_cost_modifier years = 2 }
 		}
 		debug_log = "V3NAVY_EVENT|date=[TimeKeeper.GetCurrentDate.GetString]|event=PEACEFUL_WITHDRAWAL|country=[THIS.GetCountry.GetNameNoFormatting]"
-		set_variable = { name = nte_withdrawn_from_treaty months = 2 }
+		set_variable = { name = nte_withdrawn_from_treaty months = 24 }
 		save_scope_as = withdrawing_country
 		nte_global_on_withdrawal = yes
 	}
 
+	# AI members stay at least 5 years (nte_ai_withdrawal_lock) and then leave only under sustained pressure.
 	ai_chance = {
 		value = 0
 		if = {
 			limit = {
+				NOT = { has_variable = nte_ai_withdrawal_lock }
 				has_global_variable = gnl_escalator_threat_active
+				has_variable = nte_escalator_clause_active
 				has_variable = nte_global_over_limit_flag
 				OR = {
 					has_law_or_variant = law_type:law_professional_navy
@@ -232,10 +238,11 @@ nte_btn_peaceful_withdrawal = {
 					has_strategy = ai_strategy_territorial_expansion
 				}
 			}
-			add = 25
+			add = 10
 		}
 		else_if = {
 			limit = {
+				NOT = { has_variable = nte_ai_withdrawal_lock }
 				influence >= 250
 				infamy < 20
 				has_modifier = global_naval_limitation_union_penalty
@@ -243,7 +250,7 @@ nte_btn_peaceful_withdrawal = {
 				scaled_debt <= 0.05
 				net_fixed_income > 0
 			}
-			add = 8
+			add = 3
 		}
 	}
 }
@@ -398,6 +405,8 @@ nte_btn_falsify_tonnage = {
 		NOT = { has_variable = nte_tonnage_falsification_active }
 		NOT = { has_variable = nte_falsification_cooldown }
 		NOT = { has_modifier = nte_isolated_sanction_modifier }
+		NOT = { has_modifier = nte_submarine_protocol_modifier }
+		NOT = { has_variable = nte_submarine_protocol_active }
 		influence >= 50
 	}
 
@@ -515,6 +524,16 @@ nte_btn_submarine_protocol = {
 				}
 				add = -35
 			}
+		}
+		# A submarine-heavy raider gutting its own arm is self-defeating: the protocol cuts convoy raiding and submarine damage
+		if = {
+			limit = {
+				any_scope_ship = {
+					count >= 5
+					is_ship_type = ship_type:ship_type_submarine
+				}
+			}
+			multiply = 0
 		}
 	}
 }

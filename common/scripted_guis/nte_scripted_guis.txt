@@ -1,0 +1,43 @@
+﻿# Naval Treaty Expanded - scripted GUIs for the GNL ladder widget.
+# Root = the journal entry's country; the widget passes the seat number as scope:rank (vanilla Meiji pattern).
+
+nte_gnl_rank_filled_sgui = {
+	scope = country
+	saved_scopes = { rank }
+
+	is_valid = {
+		trigger_if = {
+			limit = { scope:rank = 1 }
+			exists = global_var:gnl_rank1_country
+		}
+		trigger_else_if = {
+			limit = { scope:rank = 2 }
+			exists = global_var:gnl_rank2_country
+		}
+		trigger_else_if = {
+			limit = { scope:rank = 3 }
+			exists = global_var:gnl_rank3_country
+		}
+		trigger_else_if = {
+			limit = { scope:rank = 4 }
+			exists = global_var:gnl_rank4_country
+		}
+		trigger_else_if = {
+			limit = { scope:rank = 5 }
+			exists = global_var:gnl_rank5_country
+		}
+		trigger_else = {
+			always = no
+		}
+	}
+}
+
+nte_gnl_rank_self_sgui = {
+	scope = country
+	saved_scopes = { rank }
+
+	is_valid = {
+		has_variable = nte_locked_tier_rank
+		var:nte_locked_tier_rank = scope:rank
+	}
+}

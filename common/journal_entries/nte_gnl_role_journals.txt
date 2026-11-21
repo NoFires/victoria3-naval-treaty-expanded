@@ -1,0 +1,154 @@
+﻿# Naval Treaty Expanded - GNL role entries (one per member, added by nte_add_gnl_journal_entries).
+# The overview entry keeps membership decisions; each role entry carries only its own buttons.
+
+nte_gnl_treaty_council = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	group = global_naval_limitation_union_group
+	activation_description = { always = yes }
+
+	scripted_button = nte_btn_propose_revision_vote
+	scripted_button = nte_btn_propose_isolation_sanction
+	scripted_button = nte_btn_propose_naval_holiday
+
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_hide_default_buttons"
+		container = "custom_widget_container_buttons"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_decree_grid"
+		container = "custom_widget_container_2"
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = nte_je_status_isolation_crisis
+				trigger = { has_global_variable = gnl_isolation_vote_active }
+			}
+			triggered_desc = {
+				desc = nte_je_status_voting
+				trigger = { has_global_variable = gnl_voting_active }
+			}
+			triggered_desc = {
+				desc = nte_je_status_holiday
+				trigger = { has_global_variable = gnl_naval_holiday_active }
+			}
+			triggered_desc = {
+				desc = nte_council_status_in_recess
+				trigger = { always = yes }
+			}
+		}
+	}
+
+	outcome = {
+		flags = { hidden invalid_outcome }
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = { NOT = { has_variable = gnl_participating_country } }
+	}
+
+	weight = 120
+}
+
+nte_gnl_fleet_compliance = {
+	icon = "gfx/interface/icons/event_icons/event_industry.dds"
+	group = global_naval_limitation_union_group
+	activation_description = { always = yes }
+
+	scripted_button = nte_btn_toggle_mothball_fleet
+	scripted_button = nte_btn_scrap_obsolete_hulls
+	scripted_button = nte_btn_falsify_tonnage
+
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_hide_default_buttons"
+		container = "custom_widget_container_buttons"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_decree_grid"
+		container = "custom_widget_container_2"
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = nte_compliance_status_over
+				trigger = { has_variable = nte_global_over_limit_flag }
+			}
+			triggered_desc = {
+				desc = nte_compliance_status_near
+				trigger = { has_variable = nte_global_near_limit_flag }
+			}
+			triggered_desc = {
+				desc = nte_compliance_status_mothballed
+				trigger = { has_modifier = nte_mothballed_fleet_modifier }
+			}
+			triggered_desc = {
+				desc = nte_compliance_status_clear
+				trigger = { always = yes }
+			}
+		}
+	}
+
+	outcome = {
+		flags = { hidden invalid_outcome }
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = { NOT = { has_variable = gnl_participating_country } }
+	}
+
+	weight = 110
+}
+
+nte_gnl_naval_diplomacy = {
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	group = global_naval_limitation_union_group
+	activation_description = { always = yes }
+
+	scripted_button = nte_btn_submarine_protocol
+	scripted_button = nte_btn_naval_intelligence_exchange
+
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_hide_default_buttons"
+		container = "custom_widget_container_buttons"
+	}
+	widget = {
+		gui = "gui/journal_entry_widgets/nte_widgets.gui"
+		name = "widget_nte_decree_grid"
+		container = "custom_widget_container_2"
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = nte_naval_diplomacy_status_both
+				trigger = {
+					has_modifier = nte_submarine_protocol_modifier
+					has_modifier = nte_naval_intelligence_exchange_modifier
+				}
+			}
+			triggered_desc = {
+				desc = nte_naval_diplomacy_status_protocol
+				trigger = { has_modifier = nte_submarine_protocol_modifier }
+			}
+			triggered_desc = {
+				desc = nte_naval_diplomacy_status_intel
+				trigger = { has_modifier = nte_naval_intelligence_exchange_modifier }
+			}
+			triggered_desc = {
+				desc = nte_naval_diplomacy_status_idle
+				trigger = { always = yes }
+			}
+		}
+	}
+
+	outcome = {
+		flags = { hidden invalid_outcome }
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = { NOT = { has_variable = gnl_participating_country } }
+	}
+
+	weight = 100
+}

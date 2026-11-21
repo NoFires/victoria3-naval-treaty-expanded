@@ -86,9 +86,10 @@ INJECT:ai_strategy_default = {
 							has_law_or_variant = law_type:law_jeune_ecole
 						}
 					}
-					subtract = 10
+					subtract = 5
 				}
 			}
+			min = 5
 
 			if = {
 				limit = { is_at_war = no }
@@ -293,11 +294,22 @@ INJECT:ai_strategy_default = {
 			}
 
 			if = {
-				limit = {
-					has_technology_researched = carrier_tech
-					has_law_or_variant = law_type:law_professional_navy
+				limit = { has_technology_researched = carrier_tech }
+				if = {
+					limit = { has_law_or_variant = law_type:law_professional_navy }
+					add = 15
 				}
-				add = 5
+				else_if = {
+					limit = { has_law_or_variant = law_type:law_jeune_ecole }
+					add = 10
+				}
+				else_if = {
+					limit = { has_law_or_variant = law_type:law_diplomatic_navy }
+					add = 8
+				}
+				else = {
+					add = 5
+				}
 			}
 		}
 		ai_ship_category_transports = {

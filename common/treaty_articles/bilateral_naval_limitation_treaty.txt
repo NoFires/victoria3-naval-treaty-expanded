@@ -34,6 +34,8 @@
 			}
 			scope:source_country = {
 				is_country_alive = yes
+				# Peaceful lapse: clear the limitation state first, then let the engine break the article.
+				NOT = { has_variable = nte_bilateral_lapsed_flag }
 			}
 		}
 		show_about_to_break_warning = {
@@ -98,8 +100,9 @@
 		}
 	}
 
+	# Either party may formally withdraw once the binding period ends; a limitation that lapses on term must not lock the restricted party in forever.
 	can_withdraw = {
-		scope:withdrawing_country = scope:target_country
+		always = yes
 	}
 
 	on_withdrawal = {
