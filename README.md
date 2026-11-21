@@ -1,12 +1,12 @@
 [English](README.md) | [简体中文](README_CN.md)
 
-# Naval Treaty Expanded `[Early Demo v0.1.1]`
+# Naval Treaty Expanded `[Early Demo v0.2.0]`
 
 [![Steam Workshop](https://img.shields.io/badge/Steam%20Workshop-3838936983-1b2838?logo=steam)](https://steamcommunity.com/sharedfiles/filedetails/?id=3838936983)
 [![Victoria 3](https://img.shields.io/badge/Victoria%203-1.15.*-blue)](https://store.steampowered.com/app/529340)
 [![Multiplayer](https://img.shields.io/badge/Multiplayer-Synchronized-brightgreen)](#version-info)
 
-> **⚠️ Early Demo Notice (`v0.1.1`):** This mod is currently in an **early playable demo** stage. The core real tonnage calculation engine, global multilateral arms limitation treaty, war-enforceable bilateral disarmament treaty, and AI diplomatic acceptance system are all functional, while long-campaign 1836–1936 AI balance, mid-to-late-game pacing, and additional flavor events are still being actively tuned. Bug reports, balance suggestions, and direct collaboration are very welcome!
+> **⚠️ Early Demo Notice (`v0.2.0`):** This mod is currently in an **early playable demo** stage. The core real tonnage calculation engine, global multilateral arms limitation treaty, war-enforceable bilateral disarmament treaty, and AI diplomatic acceptance system are all functional, while long-campaign 1836–1936 AI balance, mid-to-late-game pacing, and additional flavor events are still being actively tuned. Bug reports, balance suggestions, and direct collaboration are very welcome!
 
 **Naval Treaty Expanded** is a naval arms limitation and maritime diplomacy expansion for **Victoria 3 (`1.15.*`)**. Inspired by the historical Washington and London Naval Treaties, it introduces a real ship tonnage engine, a locked-tier global multilateral naval treaty, and coercive bilateral disarmament treaties—turning naval arms races into a strategic contest balancing quotas, diplomacy, and fiscal capacity.
 
@@ -32,7 +32,7 @@ This mod uses additive injection (`INJECT:`) and isolated namespaces (`nte_*` / 
 
 ---
 
-## Current Features (`v0.1.1 Demo`)
+## Current Features (`v0.2.0 Demo`)
 
 ### Real Tonnage & Naval Doctrine Engine
 - Measures naval size by **real treaty tonnage** calculated from ship era, naval power projection, and hull hit points (`HP`), rather than raw ship counts.
@@ -66,7 +66,7 @@ This mod uses additive injection (`INJECT:`) and isolated namespaces (`nte_*` / 
 
 ## Version Info
 
-- **Current Version**: `v0.1.1` (Early Demo)
+- **Current Version**: `v0.2.0` (Early Demo)
 - **Supported Languages**: English, 简体中文 (Full bilingual localization)
 - **Multiplayer**: Fully `multiplayer_synchronized = true`
 - **Game Version**: Victoria 3 **`1.15.*`**
